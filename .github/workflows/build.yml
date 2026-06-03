@@ -1,0 +1,73 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build plugin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: webview/pnpm-lock.yaml
+
+      # 复用的 React 前端依赖:gradle buildPlugin 的 buildWebUi 任务只跑 `pnpm build`,
+      # 需要先有 node_modules,故这里先 install。
+      - name: Install web UI dependencies
+        working-directory: webview
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # buildPlugin 触发 buildWebUi(pnpm build → src/main/resources/web)再打包插件 zip。
+      # 首次会下载 IntelliJ 平台(~1.5GB),由 setup-gradle 缓存 ~/.gradle 加速后续构建。
+      - name: Build plugin (web UI + Gradle)
+        run: ./gradlew buildPlugin --no-daemon --stacktrace
+
+      - name: Upload plugin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: git-ai-studio-idea-plugin
+          path: build/distributions/*.zip
+          if-no-files-found: error
+
+      # 打 v* tag 时自动发 GitHub Release 并挂上插件 zip
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: build/distributions/*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
