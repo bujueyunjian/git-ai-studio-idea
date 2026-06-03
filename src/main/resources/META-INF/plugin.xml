@@ -1,0 +1,45 @@
+<idea-plugin>
+    <id>com.gitaistudio.idea</id>
+    <name>Git AI Studio</name>
+    <vendor url="https://github.com/bujueyunjian/git-ai-studio-idea">git-ai-studio</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <resource-bundle>messages.GitAiStudioBundle</resource-bundle>
+
+    <description><![CDATA[
+        Local AI code-authorship insight inside your IDE, on top of the external
+        <a href="https://github.com/git-ai-project/git-ai">git-ai</a> CLI.
+        Environment diagnostics, git-ai install/upgrade, official hook setup, commit attribution,
+        a cross-repo dashboard, per-person breakdown, git-notes attribution log, and in-editor
+        line-level AI attribution in the gutter. All parsing happens locally — zero data upload,
+        zero telemetry.
+    ]]></description>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.gitaistudio.idea.service.GitAiSettings"/>
+        <projectService serviceImplementation="com.gitaistudio.idea.service.RepoService"/>
+        <projectService serviceImplementation="com.gitaistudio.idea.service.StatsCache"/>
+
+        <toolWindow
+            id="Git AI Studio"
+            anchor="right"
+            icon="/icons/toolwindow.svg"
+            factoryClass="com.gitaistudio.idea.toolwindow.GitAiToolWindowFactory"/>
+
+        <notificationGroup
+            id="Git AI Studio"
+            displayType="BALLOON"
+            key="notification.group.name"/>
+    </extensions>
+
+    <actions>
+        <action
+            id="GitAiStudio.AnnotateAttribution"
+            class="com.gitaistudio.idea.editor.AnnotateAttributionAction"
+            icon="/icons/toolwindow.svg">
+            <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

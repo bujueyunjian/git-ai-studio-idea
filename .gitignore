@@ -1,0 +1,20 @@
+# Gradle / IntelliJ plugin build
+.gradle/
+build/
+out/
+.intellijPlatform/
+
+# IDE
+.idea/
+*.iml
+
+# Built web assets are generated from webview/ by the build; keep source, ignore output
+src/main/resources/web/
+
+# Node (webview)
+webview/node_modules/
+webview/dist/
+webview/.vite/
+
+# OS
+.DS_Store

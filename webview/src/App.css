@@ -1,0 +1,270 @@
+@import "tailwindcss";
+
+/* tw-animate-css 提供 animate-in / fade-in / slide-in / accordion-* 等 utility(ADR-005)。
+ * 改用 @import 而非 v3 风格 @plugin,符合 shadcn v4 默认栈。 */
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * 墨宠窗口透明化(与主窗共用 index.html / App.css)。main.tsx 在 React 挂载前给 <html>
+ * 打 .pet-window,这里据此把整份文档压成透明无滚动:
+ * - background: transparent —— 盖掉主窗 body 的不透明底色 var(--background)
+ * - color-scheme: normal —— .dark 下 color-scheme:dark 会让 WebKit 在透明窗后铺不透明深色
+ * - overflow: hidden —— 绝对定位的 hover 气泡 / 右键菜单超出小窗口时不出滚动条
+ * 规则置于所有 @layer 之外(无层级声明优先级高于任何 @layer),无需 !important 即可压过 base 层。
+ */
+html.pet-window,
+html.pet-window body,
+html.pet-window #root {
+  background: transparent;
+  overflow: hidden;
+}
+html.pet-window {
+  color-scheme: normal;
+}
+
+/*
+ * 字体 token。色板 token 在下方 @theme inline 里单源映射到 oklch 的 CSS 变量。
+ */
+@theme {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", PingFang SC, Hiragino Sans GB, Microsoft YaHei,
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/*
+ * 主题色单源:对齐参考项目 cc-switch 的 HSL 主题。中性色走 hue-240 蓝调灰阶
+ * (非零彩度,避免"死灰";深色基底 240 5% 12% 偏暖,贴近 macOS 原生暗色),
+ * 品牌色 --primary / --ring 走 cc-switch 蓝 210 100% 56%(深色 54%),--chart-* 多色相。
+ * 语义类 bg-background / bg-primary / text-primary / ring-ring / bg-chart-* 经下方
+ * @theme inline 桥接到这些 CSS 变量。
+ *
+ * # 为什么不直接写 bg-slate-950 dark:bg-slate-900 一通
+ * 散布全站的"自选 slate 阶梯"会随作者品味漂移,深色模式整体偏冷蓝。语义变量让深色与浅色
+ * 同步,改一处即可全站换肤。
+ *
+ * # 品牌蓝 = cc-switch 蓝 hsl(210 100% 56%)(深色 54%)
+ * 也是 AI 归因的语义色:StatsBar 的 AI 段 bg-primary、Dashboard 趋势图 text-primary;
+ * Blame 行级走 chartColors.ts ai 桶(CodeMirror 需 hex,取相近蓝 #3b82f6/#60a5fa)。
+ */
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply font-sans antialiased;
+  }
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: "Geist Variable", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  /* 数据 / 状态 / 卡片层级语义色(T1)。亮暗值在 :root / .dark 双写。 */
+  --color-ai: var(--ai);
+  --color-ai-foreground: var(--ai-foreground);
+  --color-ai-muted: var(--ai-muted);
+  --color-human: var(--human);
+  --color-human-foreground: var(--human-foreground);
+  --color-human-muted: var(--human-muted);
+  --color-unknown: var(--unknown);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-muted: var(--danger-muted);
+  --color-info: var(--info);
+  --color-info-muted: var(--info-muted);
+  --color-card-elevated: var(--card-elevated);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(240 10% 3.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(240 10% 3.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(240 10% 3.9%);
+  --primary: hsl(210 100% 56%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 4.8% 95.9%);
+  --secondary-foreground: hsl(240 5.9% 10%);
+  --muted: hsl(240 4.8% 95.9%);
+  --muted-foreground: hsl(240 3.8% 46.1%);
+  --accent: hsl(240 4.8% 95.9%);
+  --accent-foreground: hsl(240 5.9% 10%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(240 5.9% 90%);
+  --input: hsl(240 5.9% 90%);
+  --ring: hsl(210 100% 56%);
+  --chart-1: oklch(0.623 0.214 259.815);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.606 0.25 292.717);
+  --chart-5: oklch(0.656 0.241 354.308);
+  --radius: 0.625rem;
+  --sidebar: hsl(240 4.8% 97.9%);
+  --sidebar-foreground: hsl(240 10% 3.9%);
+  --sidebar-primary: hsl(210 100% 56%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --sidebar-border: hsl(240 5.9% 90%);
+  --sidebar-ring: hsl(210 100% 56%);
+  /* 语义数据色 + 状态色 + 卡片层级(T1)。
+   * 信息层:AI=科技蓝 / 人工=翡翠绿 / 未归因=灰;状态:成功=绿(比人工深一档以区分)、
+   * 警告=琥珀、危险=玫红、信息=蓝(走 --primary,azure 色相与 AI 的 indigo 不同,不混)。
+   * 软底统一用 rgba/hsla 旧式语法(WebView2 兼容,不用 color-mix)。
+   * Recharts/CodeMirror/canvas 的 hex 副本在 lib/chartColors.ts,须与此处 --ai/--human/--unknown 同步。 */
+  --ai: #3b82f6;
+  --ai-foreground: #ffffff;
+  --ai-muted: rgba(59, 130, 246, 0.12);
+  --human: #10b981;
+  --human-foreground: #ffffff;
+  --human-muted: rgba(16, 185, 129, 0.12);
+  --unknown: #94a3b8;
+  --success: #059669;
+  --success-muted: rgba(5, 150, 105, 0.12);
+  --warning: #f59e0b;
+  --warning-foreground: #1a1a1a;
+  --warning-muted: rgba(245, 158, 11, 0.12);
+  --danger: #e11d48;
+  --danger-foreground: #ffffff;
+  --danger-muted: rgba(225, 29, 72, 0.12);
+  --info: var(--primary);
+  --info-muted: hsla(210, 100%, 56%, 0.12);
+  --card-elevated: hsl(240 5% 97%);
+  color-scheme: light dark;
+}
+
+.dark {
+  --background: hsl(240 5% 12%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(240 5% 16%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(240 5% 16%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(210 100% 54%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 5% 18%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(240 5% 18%);
+  --muted-foreground: hsl(240 5% 64.9%);
+  --accent: hsl(240 5% 18%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(240 5% 24%);
+  --input: hsl(240 5% 24%);
+  --ring: hsl(210 100% 54%);
+  --chart-1: oklch(0.707 0.165 254.624);
+  --chart-2: oklch(0.765 0.177 163.223);
+  --chart-3: oklch(0.828 0.189 84.429);
+  --chart-4: oklch(0.702 0.183 293.541);
+  --chart-5: oklch(0.718 0.202 349.761);
+  --sidebar: hsl(240 5% 14%);
+  --sidebar-foreground: hsl(0 0% 98%);
+  --sidebar-primary: hsl(210 100% 54%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 5% 18%);
+  --sidebar-accent-foreground: hsl(0 0% 98%);
+  --sidebar-border: hsl(240 5% 24%);
+  --sidebar-ring: hsl(210 100% 54%);
+  /* 语义色暗色档(T1),对齐 :root 语义,提亮以保暗色下可读。 */
+  --ai: #60a5fa;
+  --ai-foreground: #ffffff;
+  --ai-muted: rgba(96, 165, 250, 0.2);
+  --human: #34d399;
+  --human-foreground: #0a0a0a;
+  --human-muted: rgba(52, 211, 153, 0.2);
+  --unknown: #cbd5e1;
+  --success: #10b981;
+  --success-muted: rgba(16, 185, 129, 0.2);
+  --warning: #fbbf24;
+  --warning-foreground: #1a1a1a;
+  --warning-muted: rgba(251, 191, 36, 0.2);
+  --danger: #fb7185;
+  --danger-foreground: #1a1a1a;
+  --danger-muted: rgba(251, 113, 133, 0.2);
+  --info: var(--primary);
+  --info-muted: hsla(210, 100%, 54%, 0.2);
+  --card-elevated: hsl(240 5% 20%);
+  color-scheme: dark;
+}
