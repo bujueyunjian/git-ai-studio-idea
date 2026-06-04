@@ -1,0 +1,30 @@
+build.gradle.kts
+  s_8a10433847ffdf::t_5e6057bffb5fe8 29-30
+src/main/kotlin/com/gitaistudio/idea/vcslog/AiShareLogColumn.kt
+  s_8a10433847ffdf::t_5abfadeabddeb4 1-71
+src/main/resources/META-INF/plugin.xml
+  s_8a10433847ffdf::t_bdbec62a9dd620 7
+  s_8a10433847ffdf::t_7c4ea890fedeaa 40-42
+gradle.properties
+  s_8a10433847ffdf::t_d11a3da8f02211 3
+src/main/kotlin/com/gitaistudio/idea/vcslog/LogAiShareService.kt
+  s_8a10433847ffdf::t_9509bfde30de7f 1-83
+CHANGELOG.md
+  s_8a10433847ffdf::t_a3c6a49678b70b 8-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7b0c7e229623cbb5686707a6ccbf9f53867110ae",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
