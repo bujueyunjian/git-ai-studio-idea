@@ -1,0 +1,38 @@
+webview/src/components/Layout/TopBar.tsx
+  s_8a10433847ffdf::t_66313a91cfe166 2
+webview/src/App.tsx
+  s_8a10433847ffdf::t_e29b00f3186155 7,17-19,22,30,32-33,75-76,79-82
+src/main/kotlin/com/gitaistudio/idea/toolwindow/WebUiPanel.kt
+  s_8a10433847ffdf::t_e7b1f74a7711e6 45
+  s_8a10433847ffdf::t_2c3c59667dc582 147-151,155-167
+  s_8a10433847ffdf::t_0ed0564b00c46a 15-16
+src/main/kotlin/com/gitaistudio/idea/editor/GitAiActionSupport.kt
+  s_8a10433847ffdf::t_db4a84b5db94d5 1-27
+webview/src/routerCore.ts
+  s_8a10433847ffdf::t_d58af765c667a4 18-21
+src/main/kotlin/com/gitaistudio/idea/editor/ViewFileAttributionAction.kt
+  s_8a10433847ffdf::t_ec3a6123db336a 1-35
+src/main/kotlin/com/gitaistudio/idea/editor/ViewProjectMetricsAction.kt
+  s_8a10433847ffdf::t_eb26e3cf5e8332 1-20
+src/main/resources/META-INF/plugin.xml
+  s_8a10433847ffdf::t_2496471e79d189 40-42,46-64
+webview/src/components/Layout/Rail.tsx
+  s_8a10433847ffdf::t_ebb8e8204df902 17
+  s_8a10433847ffdf::t_67bbb07319cfdc 41,54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b8f5aaaf482aae47b39bccdbe2c200383c28282b",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
