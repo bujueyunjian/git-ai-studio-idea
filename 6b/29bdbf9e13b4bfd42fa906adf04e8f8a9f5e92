@@ -1,0 +1,27 @@
+CHANGELOG.md
+  s_8a10433847ffdf::t_f043cf9873bb9f 8-21
+src/main/kotlin/com/gitaistudio/idea/vcslog/AiShareLogColumn.kt
+  s_8a10433847ffdf::t_801a0d50cc9174 27-29
+src/main/kotlin/com/gitaistudio/idea/annotate/AiAnnotationColumnProvider.kt
+  s_8a10433847ffdf::t_e0a532269d0086 1-71
+src/main/resources/META-INF/plugin.xml
+  s_8a10433847ffdf::t_943644b831db33 43-45
+gradle.properties
+  s_8a10433847ffdf::t_b87c0dd74f76fa 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6b29bdbf9e13b4bfd42fa906adf04e8f8a9f5e92",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
