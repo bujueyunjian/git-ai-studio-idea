@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-04
+
+### Added
+
+- **Native "AI by File" tab.** The Git AI Studio tool window now has a second, fully-native tab (JBTable):
+  for the current HEAD commit it lists each changed file with its AI lines / added lines / **AI %** (purple),
+  sorted by AI share; double-click opens the file. Computed off-EDT (git diff numstat + git-notes
+  attestations), bounded to one commit. Per-file detail in IntelliJ-native style.
+- **Update check.** On startup the plugin checks GitHub for a newer release and, if found, shows an IDE
+  notification with a "下载更新 / Download update" action. Version-only network call — no code/data upload.
+
+### Changed
+
+- The JCEF tool window now uses **off-screen rendering** so the panel resizes (splitter) and drags/floats
+  normally — previously the heavyweight browser swallowed those mouse events.
+- UI now **defaults to Simplified Chinese** (no longer mis-detecting the JCEF browser locale as English).
+- About → privacy wording updated to reflect the version-only update check.
+
 ## [0.3.1] - 2026-06-04
 
 ### Fixed

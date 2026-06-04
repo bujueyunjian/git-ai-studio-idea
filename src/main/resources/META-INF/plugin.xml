@@ -43,6 +43,9 @@
 
         <!-- 原生 Annotate(blame)gutter「AI」列:行级归因进 IDE 原生 blame -->
         <vcsAnnotationGutterColumnProvider implementation="com.gitaistudio.idea.annotate.AiAnnotationColumnProvider"/>
+
+        <!-- 启动时检查插件新版本(唯一外网调用,仅版本号) -->
+        <postStartupActivity implementation="com.gitaistudio.idea.update.UpdateCheckActivity"/>
     </extensions>
 
     <actions>

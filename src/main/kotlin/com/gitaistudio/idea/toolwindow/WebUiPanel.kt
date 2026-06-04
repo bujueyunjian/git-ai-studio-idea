@@ -48,7 +48,9 @@ class WebUiPanel(private val project: Project) : BorderLayoutPanel(), Disposable
         } else {
             WebSchemeHandlerFactory.ensureRegistered()
 
-            val b = JBCefBrowser.createBuilder().setOffScreenRendering(false).build()
+            // OSR(off-screen rendering)= 渲染到轻量级 Swing 组件,正常参与 z-order/事件路由;
+            // 否则重量级原生 Chromium 会吞掉工具窗口分隔条/标题处的鼠标事件,导致拖不动、调不了宽(三方审查结论)。
+            val b = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
             browser = b
             Disposer.register(this, b)
 

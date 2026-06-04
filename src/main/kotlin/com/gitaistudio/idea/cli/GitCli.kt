@@ -39,6 +39,10 @@ class GitCli(private val exe: String, private val repoDir: File?) {
     fun lsTreeFiles(ref: String): ProcResult =
         run(listOf("ls-tree", "-r", "--name-only", ref), 15_000)
 
+    /** 单提交每文件 新增/删除 行数:输出行 "<added>\t<deleted>\t<path>"(二进制为 "-\t-\t..")。 */
+    fun diffTreeNumStat(sha: String): ProcResult =
+        run(listOf("diff-tree", "--numstat", "-r", "-m", "--no-commit-id", sha), 15_000)
+
     fun showFileAtRef(ref: String, file: String): ProcResult =
         run(listOf("show", "$ref:$file"), 15_000)
 

@@ -1381,7 +1381,7 @@
     "about": {
       "title": "关于",
       "sourceCode": "源代码:",
-      "privacy": "所有数据均在本机解析,不会上传。"
+      "privacy": "你的代码与归因数据全部本机解析,绝不上传;仅会向 GitHub 查询插件自身是否有新版本。"
     },
     "effectiveIgnore": {
       "repoPrefix": "仓库:",

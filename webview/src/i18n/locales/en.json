@@ -1381,7 +1381,7 @@
     "about": {
       "title": "About",
       "sourceCode": "Source code:",
-      "privacy": "All data is processed locally and never uploaded."
+      "privacy": "Your code and attribution data stay local and are never uploaded; the plugin only checks GitHub for its own updates."
     },
     "effectiveIgnore": {
       "repoPrefix": "Repo:",

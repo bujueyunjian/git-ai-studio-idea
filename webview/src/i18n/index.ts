@@ -31,18 +31,17 @@ export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const LANG_STORAGE_KEY = "git-ai-studio.lang";
 
-/** 从 localStorage / navigator 推断初始语言。SSR / 隐私模式下安全降级到 zh-CN。 */
+/**
+ * 初始语言:用户在设置里选过就尊重(localStorage),否则**默认中文**。
+ * 不再读 navigator.language —— JCEF/Chromium 的 navigator.language 常是 en-US(与系统/IDE 无关),
+ * 会把默认误判成英文。插件默认中文,用户可在设置里切到英文(持久化)。
+ */
 function detectInitialLanguage(): SupportedLanguage {
   try {
     const stored = localStorage.getItem(LANG_STORAGE_KEY);
     if (stored === "zh-CN" || stored === "en") return stored;
   } catch {
-    // localStorage 不可用(隐私模式 / SSR):忽略,落到 navigator
-  }
-  if (typeof navigator !== "undefined") {
-    const lang = navigator.language || (navigator.languages && navigator.languages[0]) || "";
-    if (lang.toLowerCase().startsWith("zh")) return "zh-CN";
-    if (lang.toLowerCase().startsWith("en")) return "en";
+    // localStorage 不可用(隐私模式 / SSR):忽略,落到默认中文
   }
   return "zh-CN";
 }
