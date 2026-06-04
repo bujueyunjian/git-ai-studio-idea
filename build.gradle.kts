@@ -26,6 +26,8 @@ dependencies {
 
     intellijPlatform {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
+        // VCS Log API(VcsLogCustomColumn / GraphTableModel / VcsLogData)所在平台模块
+        bundledModule("intellij.platform.vcs.log.impl")
         testFramework(TestFrameworkType.Platform)
     }
 }

@@ -4,6 +4,7 @@
     <vendor url="https://github.com/bujueyunjian/git-ai-studio-idea">git-ai-studio</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.vcs</depends>
 
     <resource-bundle>messages.GitAiStudioBundle</resource-bundle>
 
@@ -36,6 +37,9 @@
             id="GitAiStudio.AiShare"
             implementation="com.gitaistudio.idea.statusbar.AiShareStatusBarWidgetFactory"
             order="last"/>
+
+        <!-- 原生 Git Log「AI 占比」列:提交级归因进 IDE 原生历史界面 -->
+        <vcsLogCustomColumn implementation="com.gitaistudio.idea.vcslog.AiShareLogColumn"/>
     </extensions>
 
     <actions>
