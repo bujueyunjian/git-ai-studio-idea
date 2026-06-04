@@ -4,6 +4,7 @@ import com.gitaistudio.idea.bridge.JsonUtil.bool
 import com.gitaistudio.idea.bridge.JsonUtil.int
 import com.gitaistudio.idea.bridge.JsonUtil.str
 import com.gitaistudio.idea.bridge.JsonUtil.strArray
+import com.gitaistudio.idea.agents.AgentHookDetector
 import com.gitaistudio.idea.cli.GitAiCli
 import com.gitaistudio.idea.cli.GitAiNotFound
 import com.gitaistudio.idea.cli.GitCli
@@ -748,7 +749,7 @@ class CommandDispatcher(
                 "sections" to JsonArray(),
                 "raw" to dbg.stdout.ifBlank { dbg.stderr },
             ),
-            "agents" to JsonArray(),
+            "agents" to AgentHookDetector.detectAll(),
             "degraded" to JsonNull.INSTANCE,
         )
     }
