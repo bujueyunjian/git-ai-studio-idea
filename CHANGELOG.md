@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-06-05
+
+### Added
+
+- **In-editor right-click "AI Share of This File".** Right-click in any file → a balloon pops up *in place*
+  (no panel/board switch) with the file's committed AI % (AI lines / total, via git-ai blame-analysis) and,
+  if there are uncommitted changes, the working-tree AI / human / unknown line counts (via `git-ai status`).
+
 ## [0.4.0] - 2026-06-04
 
 ### Added

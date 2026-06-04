@@ -60,6 +60,15 @@
         </action>
 
         <action
+            id="GitAiStudio.FileAiSummary"
+            class="com.gitaistudio.idea.editor.FileAiSummaryAction"
+            icon="/icons/toolwindow.svg"
+            text="AI Share of This File (Git AI)"
+            description="Show this file's AI authorship inline (committed + working tree) without leaving the editor">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+
+        <action
             id="GitAiStudio.ViewFileAttribution"
             class="com.gitaistudio.idea.editor.ViewFileAttributionAction"
             icon="/icons/toolwindow.svg"
