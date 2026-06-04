@@ -50,33 +50,34 @@
 
     <actions>
         <!-- 动作只定义一次(无 add-to-group),名字见名知义;由下方「Git AI」子菜单聚合。 -->
-        <action id="GitAiStudio.FileAiSummary"
-                class="com.gitaistudio.idea.editor.FileAiSummaryAction"
-                icon="/icons/toolwindow.svg"
-                text="AI Share of This File"
-                description="Show this file's AI authorship inline (committed + working tree) without leaving the editor"/>
+        <!-- 命名对齐 git-ai 命令词汇:blame / stats / dashboard -->
         <action id="GitAiStudio.AnnotateAttribution"
                 class="com.gitaistudio.idea.editor.AnnotateAttributionAction"
                 icon="/icons/toolwindow.svg"
-                text="Toggle AI Line Markers"
-                description="Color each line AI (purple) vs. human (blue) in the gutter, via git-ai blame-analysis">
+                text="Blame"
+                description="Toggle per-line AI (purple) vs. human (blue) authorship in the gutter, via git-ai blame-analysis">
             <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
         </action>
+        <action id="GitAiStudio.FileAiSummary"
+                class="com.gitaistudio.idea.editor.FileAiSummaryAction"
+                icon="/icons/toolwindow.svg"
+                text="Stats"
+                description="Show this file's AI share inline (committed + working tree), via git-ai stats/blame-analysis"/>
         <action id="GitAiStudio.ViewFileAttribution"
                 class="com.gitaistudio.idea.editor.ViewFileAttributionAction"
                 icon="/icons/toolwindow.svg"
-                text="Open File Attribution (Panel)"
+                text="Blame in Panel"
                 description="Open this file's line-level blame drill-down in the Git AI Studio tool window"/>
         <action id="GitAiStudio.ViewProjectMetrics"
                 class="com.gitaistudio.idea.editor.ViewProjectMetricsAction"
                 icon="/icons/toolwindow.svg"
-                text="Open Project Dashboard (Panel)"
-                description="Open the project's attribution Dashboard in the Git AI Studio tool window"/>
+                text="Dashboard"
+                description="Open the project's attribution dashboard in the Git AI Studio tool window"/>
 
         <!-- 编辑器右键:「Git AI」子菜单 -->
         <group id="GitAiStudio.EditorMenu" text="Git AI" popup="true" icon="/icons/toolwindow.svg">
-            <reference ref="GitAiStudio.FileAiSummary"/>
             <reference ref="GitAiStudio.AnnotateAttribution"/>
+            <reference ref="GitAiStudio.FileAiSummary"/>
             <separator/>
             <reference ref="GitAiStudio.ViewFileAttribution"/>
             <reference ref="GitAiStudio.ViewProjectMetrics"/>

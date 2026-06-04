@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-06-05
+
+### Changed
+
+- Right-click "Git AI" submenu items now use git-ai's own vocabulary — **Blame** (per-line gutter),
+  **Stats** (this file's AI share inline), **Blame in Panel**, **Dashboard** — instead of verbose labels.
+
 ## [0.4.2] - 2026-06-05
 
 ### Changed
