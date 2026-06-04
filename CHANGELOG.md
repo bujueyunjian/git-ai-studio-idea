@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-06-05
+
+### Changed
+
+- Right-click actions are now grouped under a single **"Git AI" submenu** (editor and Project view) with
+  self-explanatory names — *AI Share of This File*, *Toggle AI Line Markers*, *Open File Attribution
+  (Panel)*, *Open Project Dashboard (Panel)* — instead of four flat "(Git AI)"-suffixed items.
+
 ## [0.4.1] - 2026-06-05
 
 ### Added
