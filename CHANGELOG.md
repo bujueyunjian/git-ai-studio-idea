@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-04
+
+### Fixed
+
+- VCS Log "AI" column showed no values even when attribution existed: resolve the commit sha via the more
+  stable `getCommitMetadata` (falling back to the internal `getId`/`getCommitId`), wrap `getValue` in
+  try/catch, and log warnings (git-ai not found / `git-ai stats` failures) to idea.log for diagnosis.
+
 ## [0.3.0] - 2026-06-04
 
 ### Added

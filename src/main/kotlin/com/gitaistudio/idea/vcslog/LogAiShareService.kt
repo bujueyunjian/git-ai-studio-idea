@@ -5,6 +5,7 @@ import com.gitaistudio.idea.service.GitAiSettings
 import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.util.concurrency.AppExecutorUtil
 import java.io.File
@@ -51,12 +52,14 @@ class LogAiShareService {
         batch.groupBy({ it.first }, { it.second }).forEach { (rootPath, shas) ->
             val cli = runCatching { GitAiCli.resolve(File(rootPath), explicitPath) }.getOrNull()
             if (cli == null) {
+                LOG.warn("git-ai not found for Log AI column (root=$rootPath); column will be empty")
                 shas.forEach { if (pct.putIfAbsent(it, -1) == null) changed = true }
                 return@forEach
             }
             shas.forEach { sha ->
                 if (pct.containsKey(sha)) return@forEach
                 val r = cli.stats(sha)
+                if (!r.ok) LOG.warn("git-ai stats failed for $sha (exit=${r.exitCode}, timeout=${r.timedOut}): ${r.stderr.take(200)}")
                 pct[sha] = if (r.ok) sharePct(r.stdout) else -1
                 changed = true
             }
@@ -78,6 +81,7 @@ class LogAiShareService {
     }
 
     companion object {
+        private val LOG = Logger.getInstance(LogAiShareService::class.java)
         fun getInstance(project: Project): LogAiShareService = project.getService(LogAiShareService::class.java)
     }
 }

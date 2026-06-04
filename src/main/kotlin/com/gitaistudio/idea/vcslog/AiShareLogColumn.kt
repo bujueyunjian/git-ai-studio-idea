@@ -1,5 +1,6 @@
 package com.gitaistudio.idea.vcslog
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.ColoredTableCellRenderer
@@ -30,17 +31,40 @@ class AiShareLogColumn : VcsLogCustomColumn<String> {
     @Volatile private var table: VcsLogGraphTable? = null
 
     override fun getValue(model: GraphTableModel, row: Int): String? {
-        val idx = model.getId(row) ?: return null
-        val logData = model.logData
-        val commitId = logData.getCommitId(idx) ?: return null
-        val sha = commitId.hash.asString()
-        val rootPath = commitId.root.path
-        val svc = LogAiShareService.getInstance(logData.project)
-        val p = svc.cachedPct(sha) ?: run {
-            svc.requestWarm(rootPath, sha) { table?.repaint() }
-            return null
+        return try {
+            val project = model.logData.project
+            val (sha, rootPath) = shaAndRoot(model, row) ?: return null
+            val svc = LogAiShareService.getInstance(project)
+            val p = svc.cachedPct(sha)
+            when {
+                p == null -> {
+                    svc.requestWarm(rootPath, sha) { table?.repaint() }
+                    null
+                }
+                p < 0 -> ""
+                else -> "AI $p%"
+            }
+        } catch (t: Throwable) {
+            LOG.warn("AI log column getValue failed at row $row", t)
+            null
         }
-        return if (p < 0) "" else "AI $p%"
+    }
+
+    /** 优先用较稳的 getCommitMetadata 取 sha+root;失败回退 getId + logData.getCommitId(内部 API,跨版本易变)。 */
+    private fun shaAndRoot(model: GraphTableModel, row: Int): Pair<String, String>? {
+        runCatching {
+            val m = model.getCommitMetadata(row, false)
+            if (m != null) {
+                val root = model.getRootAtRow(row) ?: m.root
+                return m.id.asString() to root.path
+            }
+        }
+        runCatching {
+            val idx = model.getId(row) ?: return null
+            val cid = model.logData.getCommitId(idx) ?: return null
+            return cid.hash.asString() to cid.root.path
+        }
+        return null
     }
 
     override fun getStubValue(model: GraphTableModel): String = ""
@@ -51,6 +75,10 @@ class AiShareLogColumn : VcsLogCustomColumn<String> {
     }
 
     override fun isAvailable(project: Project, roots: Collection<VirtualFile>): Boolean = true
+
+    companion object {
+        private val LOG = Logger.getInstance(AiShareLogColumn::class.java)
+    }
 
     private class AiShareCellRenderer : ColoredTableCellRenderer() {
         override fun customizeCellRenderer(
