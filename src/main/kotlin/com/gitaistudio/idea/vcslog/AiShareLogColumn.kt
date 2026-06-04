@@ -24,6 +24,9 @@ class AiShareLogColumn : VcsLogCustomColumn<String> {
     override val localizedName: String = "AI"
     override val isDynamic: Boolean = true
 
+    // 默认在 Log 里可见(否则用户需手动到列头菜单勾选才出现)
+    override fun isEnabledByDefault(): Boolean = true
+
     @Volatile private var table: VcsLogGraphTable? = null
 
     override fun getValue(model: GraphTableModel, row: Int): String? {

@@ -40,6 +40,9 @@
 
         <!-- 原生 Git Log「AI 占比」列:提交级归因进 IDE 原生历史界面 -->
         <vcsLogCustomColumn implementation="com.gitaistudio.idea.vcslog.AiShareLogColumn"/>
+
+        <!-- 原生 Annotate(blame)gutter「AI」列:行级归因进 IDE 原生 blame -->
+        <vcsAnnotationGutterColumnProvider implementation="com.gitaistudio.idea.annotate.AiAnnotationColumnProvider"/>
     </extensions>
 
     <actions>

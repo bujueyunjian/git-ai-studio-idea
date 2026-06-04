@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-04
+
+### Added
+
+- **Native Annotate (blame) "AI" column.** Running IntelliJ's built-in *Annotate with Git Blame* now adds
+  an **AI** column next to author/date, marking each line AI vs human (purple = AI), via `git-ai
+  blame-analysis`. Computed once when the annotation opens (off-EDT), so the gutter reads a ready map.
+  The standalone *Toggle AI Attribution* editor action stays as a fallback until the native column is proven.
+
+### Changed
+
+- VCS Log "AI" column is now explicitly `isEnabledByDefault` (shows without manual enabling on first use;
+  on a project whose Log layout predates the plugin, enable it once via the Log header → Show Columns).
+
 ## [0.2.0] - 2026-06-04
 
 ### Added
