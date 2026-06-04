@@ -107,7 +107,10 @@ class CommandDispatcher(
         "install_hooks_for_agent" -> installHooks(args.str("jobId") ?: throw DispatchError("missing jobId"))
         "diagnose_environment" -> diagnoseEnvironment()
         "check_agent_hooks" -> JsonNull.INSTANCE
-        "get_hooks_status" -> JsonUtil.obj("mode" to "none")
+        "get_hooks_status" -> JsonUtil.obj("mode" to AgentHookDetector.claudeHookMode())
+        "read_claude_settings" -> readClaudeSettings()
+        "list_settings_backups" -> listSettingsBackups()
+        "get_git_ai_config" -> getGitAiConfig()
         "diagnose_git_ai_daemon" -> JsonUtil.obj("kind" to "idle")
 
         else -> throw DispatchError("Command not implemented in plugin v1: $cmd")
@@ -262,6 +265,49 @@ class CommandDispatcher(
         }
         emit(topic, exit)
         return JsonPrimitive(code)
+    }
+
+    /** 读 ~/.claude/settings.json 概览(Hooks 页 settings 概览卡 + 查看原文)。纯文件读,无子进程。 */
+    private fun readClaudeSettings(): JsonElement {
+        val f = File(System.getProperty("user.home").orEmpty(), ".claude/settings.json")
+        val exists = f.isFile
+        val raw = if (exists) runCatching { f.readText() }.getOrNull() else null
+        return JsonUtil.obj(
+            "path" to f.path,
+            "exists" to exists,
+            "raw_size" to (raw?.toByteArray(Charsets.UTF_8)?.size ?: 0),
+            "raw" to (raw?.let { JsonPrimitive(it) } ?: JsonNull.INSTANCE),
+            "mode" to AgentHookDetector.claudeHookMode(),
+        )
+    }
+
+    /** Claude settings 备份列表(~/.git-ai-studio/backups/claude-settings-<ms>.json)。无目录返空,绝不抛错。 */
+    private fun listSettingsBackups(): JsonElement {
+        val dir = File(System.getProperty("user.home").orEmpty(), ".git-ai-studio/backups")
+        val arr = JsonArray()
+        if (dir.isDirectory) {
+            dir.listFiles { f -> f.isFile && f.name.startsWith("claude-settings-") && f.name.endsWith(".json") }
+                ?.sortedByDescending { it.name }
+                ?.forEach { f ->
+                    val ms = f.name.removePrefix("claude-settings-").removeSuffix(".json").toLongOrNull()
+                        ?: f.lastModified()
+                    arr.add(JsonUtil.obj("path" to f.path, "at_unix_ms" to ms))
+                }
+        }
+        return arr
+    }
+
+    /** 读 ~/.git-ai/config.json(Settings 自动更新只读卡)。缺文件返默认值,初始态不算错误。 */
+    private fun getGitAiConfig(): JsonElement {
+        val f = File(System.getProperty("user.home").orEmpty(), ".git-ai/config.json")
+        val obj = if (f.isFile) {
+            runCatching { JsonParser.parseString(f.readText()).asJsonObject }.getOrNull() ?: JsonObject()
+        } else {
+            JsonObject()
+        }
+        if (!obj.has("disable_auto_updates")) obj.addProperty("disable_auto_updates", false)
+        if (!obj.has("update_channel") || obj.get("update_channel").isJsonNull) obj.addProperty("update_channel", "stable")
+        return obj
     }
 
     private fun applySettingsPatch(patch: JsonObject): JsonElement {

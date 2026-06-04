@@ -13,6 +13,8 @@ import DashboardPage from "./pages/Dashboard";
 import PeoplePage from "./pages/People";
 import StatsPage from "./pages/Stats";
 import NotesPage from "./pages/Notes";
+import HooksPage from "./pages/Hooks";
+import SettingsPage from "./pages/SettingsLean";
 
 // 插件(精简)版:只保留 Dashboard / Stats / People / Notes / Diagnostic 五页;
 // 桌面专属的后台 watcher、首启引导向导、主题切换、托盘/自启/宠物均已移除。
@@ -78,6 +80,10 @@ function renderPage(r: ReturnType<typeof useRouter>["current"]) {
       return <NotesPage />;
     case "diagnostic":
       return <DiagnosticPage />;
+    case "hooks":
+      return <HooksPage />;
+    case "settings":
+      return <SettingsPage />;
     default:
       return <DashboardPage />;
   }

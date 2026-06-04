@@ -14,7 +14,7 @@
 // 未选中项文字 slate-700 / 图标 slate-500(可读不发灰),hover `bg-slate-100`。
 // 蓝色交互态刻意用字面 blue/slate 类(而非中性 token),与全站品牌蓝一致、观感更鲜明。
 
-import { Activity, LayoutDashboard, BarChart3, Users, FileJson } from "lucide-react";
+import { Activity, LayoutDashboard, BarChart3, Users, FileJson, Plug, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -51,7 +51,11 @@ const GROUPS: NavGroup[] = [
   },
   {
     titleKey: "rail.group.config",
-    items: [{ id: "diagnostic", labelKey: "nav.diagnostic", icon: Activity }],
+    items: [
+      { id: "diagnostic", labelKey: "nav.diagnostic", icon: Activity },
+      { id: "hooks", labelKey: "nav.hooks", icon: Plug },
+      { id: "settings", labelKey: "nav.settings", icon: Settings },
+    ],
   },
 ];
 

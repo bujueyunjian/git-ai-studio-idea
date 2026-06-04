@@ -40,6 +40,14 @@ object AgentHookDetector {
 
     fun detectAll(): JsonArray = JsonArray().apply { SPECS.forEach { add(detect(it)) } }
 
+    /** Claude hook 模式:~/.claude/settings.json 含 git-ai checkpoint claude → "official",否则 "none"。 */
+    fun claudeHookMode(): String {
+        val f = File(System.getProperty("user.home").orEmpty(), ".claude/settings.json")
+        if (!f.isFile) return "none"
+        val text = runCatching { f.readText() }.getOrNull() ?: return "none"
+        return if (extractQuotedLiterals(text).any { isGitAiHook(it, "claude") }) "official" else "none"
+    }
+
     private fun detect(spec: Spec): JsonObject {
         val home = System.getProperty("user.home").orEmpty()
         val existing = spec.relPaths.map { File(home, it) }.firstOrNull { it.isFile }
