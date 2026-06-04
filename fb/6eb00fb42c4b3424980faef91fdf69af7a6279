@@ -1,0 +1,20 @@
+src/main/kotlin/com/gitaistudio/idea/agents/AgentHookDetector.kt
+  s_8a10433847ffdf::t_3b5189011376d5 7,11,48-49,51-52,55-58,84-87,115-123,142-143
+  s_8a10433847ffdf::t_559c9b5c420e9a 1-6,8-10,12-47,50,53-54,59-83,88-109,133-141,144-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "fb6eb00fb42c4b3424980faef91fdf69af7a6279",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
