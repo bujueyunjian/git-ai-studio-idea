@@ -1,0 +1,37 @@
+src/main/resources/META-INF/plugin.xml
+  s_8a10433847ffdf::t_12740583a4aec1 46-48
+src/main/kotlin/com/gitaistudio/idea/toolwindow/WebUiPanel.kt
+  s_8a10433847ffdf::t_fcdea843c32513 51-53
+webview/src/i18n/index.ts
+  s_8a10433847ffdf::t_cc7bc80bfd9426 34-38,44
+src/main/kotlin/com/gitaistudio/idea/update/UpdateCheckActivity.kt
+  s_8a10433847ffdf::t_da2d1dbc851360 1-74
+src/main/kotlin/com/gitaistudio/idea/filestable/AiByFilePanel.kt
+  s_8a10433847ffdf::t_536574c30ebd88 1-184
+webview/src/i18n/locales/zh-CN.json
+  s_8a10433847ffdf::t_ec07f78a6e2f16 1384
+webview/src/i18n/locales/en.json
+  s_8a10433847ffdf::t_f33fa2d1063ba1 1384
+CHANGELOG.md
+  s_8a10433847ffdf::t_e1c6aea6a842a1 8-25
+src/main/kotlin/com/gitaistudio/idea/cli/GitCli.kt
+  s_8a10433847ffdf::t_303b991c00c299 42-45
+src/main/kotlin/com/gitaistudio/idea/toolwindow/GitAiToolWindowFactory.kt
+  s_8a10433847ffdf::t_390ee5daeba730 13-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ac305f57b415aa635221bb83c3bf41acb08a861d",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
