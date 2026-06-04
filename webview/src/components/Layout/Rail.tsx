@@ -14,19 +14,7 @@
 // 未选中项文字 slate-700 / 图标 slate-500(可读不发灰),hover `bg-slate-100`。
 // 蓝色交互态刻意用字面 blue/slate 类(而非中性 token),与全站品牌蓝一致、观感更鲜明。
 
-import {
-  Activity,
-  LayoutDashboard,
-  BarChart3,
-  Users,
-  FileJson,
-  FolderGit2,
-  ListTodo,
-  Package,
-  Plug,
-  ScrollText,
-  BookOpen,
-} from "lucide-react";
+import { Activity, LayoutDashboard, BarChart3, Users, FileJson } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -50,6 +38,7 @@ interface NavGroup {
 
 // 两组导航:label 中英规范 —— 能中文的中文(提交归因 / 作者归因 / 环境诊断 /
 // 安装升级 / Hooks 配置),专有名词保留英文(Dashboard / git notes / Checkpoints)。
+// 精简版导航:分析四页 + 环境诊断。安装/Hooks/日志/仓库/手册/设置已从 IDE 插件中移除。
 const GROUPS: NavGroup[] = [
   {
     titleKey: "rail.group.analysis",
@@ -58,21 +47,11 @@ const GROUPS: NavGroup[] = [
       { id: "stats", labelKey: "nav.commits", icon: BarChart3 },
       { id: "people", labelKey: "nav.people", icon: Users },
       { id: "notes", labelKey: "nav.notes", icon: FileJson },
-      { id: "checkpoints", labelKey: "nav.checkpoints", icon: ListTodo },
     ],
   },
   {
     titleKey: "rail.group.config",
-    items: [
-      { id: "diagnostic", labelKey: "nav.diagnostic", icon: Activity },
-      { id: "install", labelKey: "nav.install", icon: Package },
-      { id: "hooks", labelKey: "nav.hooks", icon: Plug },
-      { id: "logs", labelKey: "nav.logs", icon: ScrollText },
-    ],
-  },
-  {
-    titleKey: "rail.group.help",
-    items: [{ id: "manual", labelKey: "nav.manual", icon: BookOpen }],
+    items: [{ id: "diagnostic", labelKey: "nav.diagnostic", icon: Activity }],
   },
 ];
 
@@ -104,15 +83,6 @@ export function Rail({
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto px-2 py-2">
-        {/* 「仓库」置顶独立项:分析的前置(选仓 / 多选聚合 / 设下钻焦点),不归入任何分组。 */}
-        <div>
-          <RailButton
-            icon={FolderGit2}
-            label={t("nav.repo")}
-            active={current === "repo"}
-            onClick={() => onNavigate("repo")}
-          />
-        </div>
         {GROUPS.map((group) => (
           <div key={group.titleKey}>
             <div className="px-2 pb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">

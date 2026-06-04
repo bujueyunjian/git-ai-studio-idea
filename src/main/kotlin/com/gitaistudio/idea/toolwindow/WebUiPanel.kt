@@ -12,6 +12,8 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.Key
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.jcef.JBCefBrowser
@@ -40,6 +42,7 @@ class WebUiPanel(private val project: Project) : BorderLayoutPanel(), Disposable
     private var dispatcher: CommandDispatcher? = null
 
     init {
+        project.putUserData(PANEL_KEY, this)
         if (!JBCefApp_isSupported()) {
             addToCenter(JBLabel(com.gitaistudio.idea.GitAiBundle.message("toolwindow.jcef.unsupported")))
         } else {
@@ -141,8 +144,25 @@ class WebUiPanel(private val project: Project) : BorderLayoutPanel(), Disposable
     private fun pluginVersion(): String =
         PluginManagerCore.getPlugin(PluginId.getId("com.gitaistudio.idea"))?.version ?: "0.1.0"
 
+    /** 让原生侧(编辑器右键动作)驱动复用的 React 应用导航:直接切 hash,RouterProvider 监听 hashchange。 */
+    fun navigateTo(hash: String) {
+        exec("window.location.hash = ${gson.toJson(hash)};")
+    }
+
     /** JCEF 支持探测;独立小函数,便于 init 里读起来顺。 */
     private fun JBCefApp_isSupported(): Boolean = com.intellij.ui.jcef.JBCefApp.isSupported()
 
-    override fun dispose() {}
+    override fun dispose() {
+        if (project.getUserData(PANEL_KEY) === this) project.putUserData(PANEL_KEY, null)
+    }
+
+    companion object {
+        private val PANEL_KEY = Key.create<WebUiPanel>("gitai.webui.panel")
+
+        /** 打开 Git AI Studio 工具窗口并导航到指定 hash 路由(由编辑器/项目视图右键动作调用)。 */
+        fun openWebviewAt(project: Project, hash: String) {
+            val tw = ToolWindowManager.getInstance(project).getToolWindow("Git AI Studio") ?: return
+            tw.activate({ project.getUserData(PANEL_KEY)?.navigateTo(hash) }, true)
+        }
+    }
 }

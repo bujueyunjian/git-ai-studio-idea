@@ -46,7 +46,7 @@ class CommandDispatcher(
         "ping" -> JsonPrimitive("pong")
         "resolve_git_ai_path" -> resolveGitAiPath()
 
-        "get_app_settings" -> settings.appSettings()
+        "get_app_settings" -> appSettingsWithProjectRepo()
         "set_app_settings" -> applySettingsPatch(args)
         "get_auto_launch_status" -> JsonPrimitive(false)
         "set_auto_launch" -> JsonPrimitive(args.bool("enabled", false))
@@ -101,6 +101,9 @@ class CommandDispatcher(
 
         "clear_stats_cache" -> JsonPrimitive(cache.clear())
         "invalidate_diagnostic_cache" -> JsonNull.INSTANCE
+        "run_git_ai_debug_report" -> runGitAiDebugReport(args.str("jobId") ?: throw DispatchError("missing jobId"))
+        "install_hooks_official" -> installHooks(args.str("jobId") ?: throw DispatchError("missing jobId"))
+        "install_hooks_for_agent" -> installHooks(args.str("jobId") ?: throw DispatchError("missing jobId"))
         "diagnose_environment" -> diagnoseEnvironment()
         "check_agent_hooks" -> JsonNull.INSTANCE
         "get_hooks_status" -> JsonUtil.obj("mode" to "none")
@@ -202,6 +205,62 @@ class CommandDispatcher(
         obj.add("aggregate_repos", JsonUtil.arr(args.strArray("repos").map { JsonPrimitive(it) }))
         settings.saveAppSettings(obj)
         return JsonNull.INSTANCE
+    }
+
+    /**
+     * get_app_settings 之上叠加"当前项目仓库":首次运行 last_repo 为空时,把项目 git 根填进去,
+     * 让首启引导向导(RepoSetupGuide 的 open 门控含 !last_repo)直接关闭——IDE 里仓库默认就是当前工程。
+     * **不持久化**:config 是应用全局的,只在本次 payload 里合成,避免一个工程的路径泄漏到其它工程/窗口。
+     */
+    private fun appSettingsWithProjectRepo(): JsonObject {
+        val obj = settings.appSettings()
+        val lastRepo = obj.get("last_repo")
+        if (lastRepo == null || lastRepo.isJsonNull) {
+            repoService.currentRepoDir()?.let { obj.addProperty("last_repo", it.absolutePath) }
+        }
+        return obj
+    }
+
+    /** `git-ai debug` 流式诊断报告:逐行推到 logs://debug/<jobId>,完成后推 exit 事件,返回退出码。 */
+    private fun runGitAiDebugReport(jobId: String): JsonElement {
+        val exe = com.gitaistudio.idea.cli.ExecutableLocator.find("git-ai", settings.gitAiPath)
+            ?: throw DispatchError("git-ai not found on PATH")
+        val topic = "logs://debug/$jobId"
+        val code = com.gitaistudio.idea.cli.ProcessRunner.runStreaming(
+            exe, listOf("debug"), repoService.currentRepoDir(), 15_000,
+        ) { line ->
+            emit(topic, JsonUtil.obj("stream" to "stdout", "line" to line, "ts" to System.currentTimeMillis()))
+        }
+        val exit = if (code == -1) {
+            JsonUtil.obj("stream" to "exit", "code" to -1, "timeout" to true, "ts" to System.currentTimeMillis())
+        } else {
+            JsonUtil.obj("stream" to "exit", "code" to code, "ts" to System.currentTimeMillis())
+        }
+        emit(topic, exit)
+        return JsonPrimitive(code)
+    }
+
+    /**
+     * 官方安装 hook:流式跑幂等的 `git-ai install`,逐行推到 hooks://<jobId>/log,返回退出码。
+     * Diagnostic 页的「修复缺失 hook」按钮即调它(只 await 退出码,不监听流;流事件仅为未来留口)。
+     * install_hooks_for_agent 复用本实现 —— 上游 `git-ai install` 不支持按 agent 过滤,本就是整体幂等安装。
+     */
+    private fun installHooks(jobId: String): JsonElement {
+        val exe = com.gitaistudio.idea.cli.ExecutableLocator.find("git-ai", settings.gitAiPath)
+            ?: throw DispatchError("git-ai not found on PATH")
+        val topic = "hooks://$jobId/log"
+        val code = com.gitaistudio.idea.cli.ProcessRunner.runStreaming(
+            exe, listOf("install"), repoService.currentRepoDir(), 120_000,
+        ) { line ->
+            emit(topic, JsonUtil.obj("stream" to "stdout", "line" to line, "ts" to System.currentTimeMillis()))
+        }
+        val exit = if (code == -1) {
+            JsonUtil.obj("stream" to "exit", "code" to -1, "timeout" to true, "ts" to System.currentTimeMillis())
+        } else {
+            JsonUtil.obj("stream" to "exit", "code" to code, "ts" to System.currentTimeMillis())
+        }
+        emit(topic, exit)
+        return JsonPrimitive(code)
     }
 
     private fun applySettingsPatch(patch: JsonObject): JsonElement {

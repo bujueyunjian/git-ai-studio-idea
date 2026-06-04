@@ -15,20 +15,10 @@ export type RouteId =
   | "repo"
   | "settings";
 
-const ALL_ROUTES: RouteId[] = [
-  "diagnostic",
-  "install",
-  "hooks",
-  "logs",
-  "dashboard",
-  "people",
-  "stats",
-  "notes",
-  "checkpoints",
-  "manual",
-  "repo",
-  "settings",
-];
+// 插件(精简)版只暴露这 5 个运行时有效路由。RouteId 联合类型保留全集不动,
+// 这样被砍页面里残留的 navigate("install") / catalog 路由字面量仍能编译,
+// 运行时经 parseHash 落不到有效集 → 优雅回落 DEFAULT_ROUTE(dashboard),不报错不崩。
+const ALL_ROUTES: RouteId[] = ["dashboard", "stats", "people", "notes", "diagnostic"];
 
 /** 空 hash / 非法 route 的默认落地页。
  *  默认 `dashboard` —— 让新用户第一眼看到产品价值(AI 归因),而非一屏系统检查项。

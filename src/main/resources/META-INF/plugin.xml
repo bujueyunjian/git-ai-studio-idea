@@ -37,9 +37,31 @@
         <action
             id="GitAiStudio.AnnotateAttribution"
             class="com.gitaistudio.idea.editor.AnnotateAttributionAction"
-            icon="/icons/toolwindow.svg">
+            icon="/icons/toolwindow.svg"
+            text="Toggle AI Attribution (Git AI)"
+            description="Show per-line AI vs. human authorship in the editor gutter, via git-ai blame-analysis">
             <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+
+        <action
+            id="GitAiStudio.ViewFileAttribution"
+            class="com.gitaistudio.idea.editor.ViewFileAttributionAction"
+            icon="/icons/toolwindow.svg"
+            text="View This File's AI Attribution (Git AI)"
+            description="Open this file's blame drill-down in the Git AI Studio tool window">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+
+        <action
+            id="GitAiStudio.ViewProjectMetrics"
+            class="com.gitaistudio.idea.editor.ViewProjectMetricsAction"
+            icon="/icons/toolwindow.svg"
+            text="View Project AI Metrics (Git AI)"
+            description="Open the current project's attribution Dashboard in the Git AI Studio tool window">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, Copy, FolderGit2, GitBranch, Loader2, Settings } from "lucide-react";
+import { Check, ChevronDown, Copy, FolderGit2, GitBranch, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -23,7 +23,6 @@ import {
 } from "../ui/Command";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/PopoverPanel";
 import { Tooltip } from "../ui/TooltipBubble";
-import { UpdateBadge } from "../UpdateBadge";
 import type { RouteId } from "../../router";
 
 /**
@@ -128,22 +127,6 @@ export function TopBar({ onNavigate, onRepoChanged }: Props) {
               </CommandGroup>
             </CommandList>
           </Command>
-          {/* 「管理仓库…」放在 Command 容器之外:cmdk 1.x 的 CommandItem 即便 forceMount,
-              当 value 与当前 filter 词不匹配时,鼠标点击的 onSelect 会被静默吞掉。改成
-              Popover 内的独立 button,绕开 cmdk 的 filter / selectable 机制,直接 onClick。 */}
-          <div className="border-t border-border">
-            <button
-              type="button"
-              onClick={() => {
-                setRepoPickerOpen(false);
-                onNavigate("repo");
-              }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-            >
-              <FolderGit2 className="h-4 w-4 text-muted-foreground" />
-              <span>{t("topBar.manageRepos")}</span>
-            </button>
-          </div>
         </PopoverContent>
       </Popover>
 
@@ -179,22 +162,6 @@ export function TopBar({ onNavigate, onRepoChanged }: Props) {
       )}
 
       <div className="flex-1" />
-
-      {/* 更新徽章:仅在有可用更新时显示,点击深链 settings 查看 / 安装 */}
-      <UpdateBadge onClick={() => onNavigate("settings")} />
-
-      {/* 设置齿轮:深链 settings。ghost icon 按钮(参考 cc-switch),中性 token hover,
-          不抢色(原硬编码蓝 hover 已移除);方形定宽 + focus-visible ring 兼顾键盘可达。 */}
-      <Tooltip content={t("topBar.settingsTooltip")} side="bottom">
-        <button
-          type="button"
-          onClick={() => onNavigate("settings")}
-          aria-label={t("topBar.settingsTooltip")}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Settings className="h-4 w-4" />
-        </button>
-      </Tooltip>
     </header>
   );
 }
