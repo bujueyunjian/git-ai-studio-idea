@@ -1,0 +1,23 @@
+src/main/kotlin/com/gitaistudio/idea/editor/FileAiSummaryAction.kt
+  s_8a10433847ffdf::t_8448d97d6b1e7a 1-123
+CHANGELOG.md
+  s_8a10433847ffdf::t_90210159df3233 8-15
+src/main/resources/META-INF/plugin.xml
+  s_8a10433847ffdf::t_d0e98fda3998f5 63-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ff96831775c5597ab46f9942019fbb080d964c2c",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
