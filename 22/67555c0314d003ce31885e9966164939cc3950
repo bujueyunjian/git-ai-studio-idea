@@ -1,0 +1,23 @@
+src/main/kotlin/com/gitaistudio/idea/statusbar/AiShareStatusBarWidgetFactory.kt
+  s_8a10433847ffdf::t_9ac49f3d310ed0 1-16
+src/main/resources/META-INF/plugin.xml
+  s_8a10433847ffdf::t_9bcf3f3599b639 34-38
+src/main/kotlin/com/gitaistudio/idea/statusbar/AiShareStatusBarWidget.kt
+  s_8a10433847ffdf::t_5a25b70bf1dc68 1-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2267555c0314d003ce31885e9966164939cc3950",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
