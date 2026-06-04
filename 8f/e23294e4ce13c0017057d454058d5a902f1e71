@@ -1,0 +1,27 @@
+src/main/kotlin/com/gitaistudio/idea/vcslog/LogAiShareService.kt
+  s_8a10433847ffdf::t_adea03d3e52ba1 8
+  s_8a10433847ffdf::t_e171d0123dbeb1 84
+  s_8a10433847ffdf::t_ce69f3b2711fd8 55,62
+src/main/kotlin/com/gitaistudio/idea/vcslog/AiShareLogColumn.kt
+  s_8a10433847ffdf::t_cc594da221c041 3
+  s_8a10433847ffdf::t_d603508aad54db 79-82
+  s_8a10433847ffdf::t_304437cfa5d984 34-49,51-67
+CHANGELOG.md
+  s_8a10433847ffdf::t_f6b4ec5fa89514 8-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8fe23294e4ce13c0017057d454058d5a902f1e71",
+  "prompts": {},
+  "sessions": {
+    "s_8a10433847ffdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afd21e71-40e8-4360-9e85-cffcf6d224b8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
