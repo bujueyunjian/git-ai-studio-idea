@@ -44,8 +44,10 @@ class AiAnnotationColumnProvider : AnnotationGutterColumnProvider {
             val line = k.toIntOrNull() ?: continue
             val author = v.asString
             if (promptRecords?.has(author) == true) {
+                // agent_id 是对象 {tool,id,model};整体 .asString 会抛 UnsupportedOperationException → 整列消失。取 model。
                 out[line] = promptRecords.getAsJsonObject(author)?.get("agent_id")
-                    ?.takeIf { !it.isJsonNull }?.asString
+                    ?.takeIf { it.isJsonObject }?.asJsonObject
+                    ?.get("model")?.takeIf { it.isJsonPrimitive }?.asString
             }
         }
         return out

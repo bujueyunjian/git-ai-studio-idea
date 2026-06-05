@@ -174,13 +174,18 @@ class CommandDispatcher(
     }
 
     private fun pickDirectory(title: String?): JsonElement {
+        // 命令在 pooled 线程触发,默认 modality 在部分窗管(Linux-Wayland / Windows 多屏)下会把
+        // 模态目录选择器排到永不激活的上下文 → 用户看着"点了没反应"。显式 ModalityState.any() + 日志(响亮)。
+        val log = com.intellij.openapi.diagnostic.Logger.getInstance(CommandDispatcher::class.java)
         val ref = java.util.concurrent.atomic.AtomicReference<String?>(null)
-        ApplicationManager.getApplication().invokeAndWait {
+        log.info("pick_directory: opening folder chooser")
+        ApplicationManager.getApplication().invokeAndWait(Runnable {
             val descriptor = com.intellij.openapi.fileChooser.FileChooserDescriptorFactory.createSingleFolderDescriptor()
             title?.let { descriptor.title = it }
             val chosen = com.intellij.openapi.fileChooser.FileChooser.chooseFile(descriptor, project, null)
             ref.set(chosen?.path)
-        }
+        }, com.intellij.openapi.application.ModalityState.any())
+        log.info("pick_directory: chosen=${ref.get() ?: "(cancelled or no selection)"}")
         return ref.get()?.let { JsonPrimitive(it) } ?: JsonNull.INSTANCE
     }
 
@@ -629,17 +634,55 @@ class CommandDispatcher(
     }
 
     private fun showAiNote(sha: String): JsonElement {
-        val dir = repoService.currentRepoDir() ?: throw DispatchError("No repository")
+        val dir = repoService.currentRepoDir()
+            ?: return JsonUtil.obj("status" to "degraded", "reason" to JsonUtil.obj("kind" to "repo_missing"))
         val git = GitCli.resolve(dir)
-        if (!git.revParseVerifyCommit(sha).ok) return JsonUtil.obj("status" to "unreachable", "sha" to sha)
+        if (!git.revParseVerifyCommit(sha).ok)
+            return JsonUtil.obj("status" to "degraded", "reason" to JsonUtil.obj("kind" to "no_notes_in_repo"))
         val r = git.notesShow(sha)
         if (!r.ok) {
             return if (r.stderr.contains("no note", ignoreCase = true) || r.stdout.isBlank())
-                JsonUtil.obj("status" to "no_note", "sha" to sha)
+                JsonUtil.obj("status" to "degraded", "reason" to JsonUtil.obj("kind" to "no_notes_in_repo"))
             else throw DispatchError("git notes show failed: ${r.stderr.ifBlank { "exit ${r.exitCode}" }}")
         }
-        val parsed = runCatching { JsonParser.parseString(r.stdout) }.getOrNull()
-        return JsonUtil.obj("status" to "ok", "sha" to sha, "log" to (parsed ?: JsonNull.INSTANCE), "raw" to r.stdout)
+        val note = parseAiNote(r.stdout)
+        val meta = note.getAsJsonObject("metadata")
+        // 对齐前端 NotesAuthorshipMetadata 必填字段;真实 note 的 JSON 缺 humans。
+        if (!meta.has("schema_version")) meta.addProperty("schema_version", "")
+        if (!meta.has("git_ai_version")) meta.add("git_ai_version", JsonNull.INSTANCE)
+        if (!meta.has("base_commit_sha")) meta.addProperty("base_commit_sha", sha)
+        if (!meta.has("prompts")) meta.add("prompts", JsonObject())
+        if (!meta.has("humans")) meta.add("humans", JsonObject())
+        if (!meta.has("sessions")) meta.add("sessions", JsonObject())
+        val log = JsonUtil.obj("attestations" to note.get("attestations"), "metadata" to meta)
+        return JsonUtil.obj("status" to "ok", "payload" to JsonUtil.obj("commit_sha" to sha, "log" to log))
+    }
+
+    /**
+     * 解析 refs/notes/ai:文本归因段(file-path 行 + 缩进 "<hash> <line_ranges>" 行)+ 整行 "---" + JSON 元数据。
+     * 返回 {attestations:[{file_path, entries:[{hash, line_ranges}]}], metadata:<JSON 或 {}>}。
+     * 对齐上游 git-ai notes_ai.rs 的 parse_authorship_log:整段不是 JSON,旧实现整体 JsonParser 必失败。
+     */
+    private fun parseAiNote(stdout: String): JsonObject {
+        val lines = stdout.split('\n')
+        val divider = lines.indexOfFirst { it.trim() == "---" }
+        val textLines = if (divider >= 0) lines.subList(0, divider) else lines
+        val jsonText = if (divider >= 0) lines.subList(divider + 1, lines.size).joinToString("\n") else ""
+        val attestations = JsonArray()
+        var entries: JsonArray? = null
+        for (raw in textLines) {
+            if (raw.isBlank()) continue
+            if (raw[0] == ' ' || raw[0] == '\t') {
+                val t = raw.trim()
+                val sp = t.indexOf(' ')
+                if (sp > 0) entries?.add(JsonUtil.obj("hash" to t.substring(0, sp), "line_ranges" to t.substring(sp + 1).trim()))
+            } else {
+                entries = JsonArray()
+                attestations.add(JsonUtil.obj("file_path" to raw.trim(), "entries" to entries))
+            }
+        }
+        val metadata = runCatching { JsonParser.parseString(jsonText).asJsonObject }.getOrNull()
+        return JsonUtil.obj("attestations" to attestations, "metadata" to (metadata ?: JsonObject()))
     }
 
     private fun listChangedFiles(sha: String): JsonElement {
@@ -660,24 +703,38 @@ class CommandDispatcher(
     }
 
     private fun listAiLines(sha: String): JsonElement {
-        val dir = repoService.currentRepoDir() ?: throw DispatchError("No repository")
+        val dir = repoService.currentRepoDir()
+            ?: return JsonUtil.obj("status" to "degraded", "reason" to JsonUtil.obj("kind" to "repo_missing"))
         val git = GitCli.resolve(dir)
+        if (!git.revParseVerifyCommit(sha).ok)
+            return JsonUtil.obj("status" to "degraded", "reason" to JsonUtil.obj("kind" to "invalid_sha", "sha" to sha))
         val note = git.notesShow(sha)
-        val byFile = JsonObject()
+        val refs = JsonArray()
         if (note.ok && note.stdout.isNotBlank()) {
-            runCatching { JsonParser.parseString(note.stdout).asJsonObject }.getOrNull()?.let { log ->
-                log.getAsJsonArray("attestations")?.forEach { att ->
-                    val a = att.asJsonObject
-                    val file = a.str("file_path") ?: a.str("file") ?: return@forEach
-                    val lines = JsonArray()
-                    a.getAsJsonArray("line_ranges")?.forEach { lr ->
-                        expandRanges(lr.asString).forEach { lines.add(it) }
+            parseAiNote(note.stdout).getAsJsonArray("attestations").forEach { att ->
+                val a = att.asJsonObject
+                val file = a.str("file_path") ?: return@forEach
+                a.getAsJsonArray("entries")?.forEach { e ->
+                    val ranges = e.asJsonObject.str("line_ranges") ?: return@forEach
+                    ranges.split(',').forEach { seg ->
+                        val t = seg.trim()
+                        if (t.isEmpty()) return@forEach
+                        val (start, end) = if (t.contains('-')) {
+                            val parts = t.split('-')
+                            val s = parts.getOrNull(0)?.trim()?.toIntOrNull()
+                            val en = parts.getOrNull(1)?.trim()?.toIntOrNull()
+                            if (s == null || en == null) return@forEach
+                            s to en
+                        } else {
+                            val n = t.toIntOrNull() ?: return@forEach
+                            n to n
+                        }
+                        refs.add(JsonUtil.obj("file" to file, "line_start" to start, "line_end" to end))
                     }
-                    byFile.add(file, lines)
                 }
             }
         }
-        return JsonUtil.obj("files" to byFile)
+        return JsonUtil.obj("status" to "ok", "lines" to refs)
     }
 
     // ---------- 分支 / 文件 ----------
@@ -887,16 +944,6 @@ class CommandDispatcher(
         return r.ok && r.stdout.trim().split(' ').filter { it.isNotBlank() }.size > 1
     }
 
-    private fun expandRanges(spec: String): List<Int> = buildList {
-        spec.split(',').forEach { part ->
-            val t = part.trim()
-            if (t.contains('-')) {
-                val (a, b) = t.split('-').map { it.trim().toIntOrNull() ?: return@forEach }
-                for (i in a..b) add(i)
-            } else t.toIntOrNull()?.let { add(it) }
-        }
-    }
-
     /** git-ai blame-analysis 结果 → 前端 BlamePayload。AI 行(value 是 prompt hash)压缩为连续区间。 */
     private fun transformBlame(result: JsonObject): JsonObject {
         val lineAuthors = result.getAsJsonObject("line_authors") ?: JsonObject()
@@ -920,10 +967,20 @@ class CommandDispatcher(
             else { flush(); runStart = line; prev = line; prevId = id }
         }
         flush()
+        // git-ai 1.5.2 的 prompt_records 不含 other_files/commits,顶层也无 metadata;
+        // 前端 BlamePromptDetails 把这两字段当必填读 .length → undefined 崩溃整窗。
+        // 对齐桌面版 convert_analysis(blame.rs):缺则补空数组、合成默认 metadata。
+        for ((_, rec) in promptRecords.entrySet()) {
+            val o = rec.takeIf { it.isJsonObject }?.asJsonObject ?: continue
+            if (!o.has("other_files")) o.add("other_files", JsonArray())
+            if (!o.has("commits")) o.add("commits", JsonArray())
+        }
+        val metadata = result.getAsJsonObject("metadata")
+            ?: JsonUtil.obj("is_logged_in" to false, "current_user" to JsonNull.INSTANCE)
         return JsonUtil.obj(
             "lines" to lines,
             "prompts" to promptRecords,
-            "metadata" to (result.getAsJsonObject("metadata") ?: JsonObject()),
+            "metadata" to metadata,
             "hunks" to (result.getAsJsonArray("blame_hunks") ?: JsonArray()),
         )
     }

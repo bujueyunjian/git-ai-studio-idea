@@ -5,6 +5,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-06-05
+
+### Fixed
+
+- **Blank blame popup — real root cause (v0.4.4 was necessary but insufficient).** v0.4.4 fixed the response
+  *envelope* shape, but the dialog still went blank: `transformBlame` passed git-ai's `prompt_records` through
+  verbatim, and git-ai 1.5.2 records carry no `other_files`/`commits` (nor a top-level `metadata`). The
+  webview's `BlamePromptDetails` reads `record.other_files.length`/`record.commits.length` as required →
+  `undefined.length` TypeError when clicking an AI line → with no ErrorBoundary the whole React tree unmounted
+  → blank panel. `transformBlame` now backfills `other_files: []` / `commits: []` per record and synthesizes
+  `metadata: {is_logged_in:false, current_user:null}`, mirroring the desktop Rust `convert_analysis`.
+- **Webview ErrorBoundary.** A render exception in any single component now degrades to a local error card
+  (with Retry) instead of blanking the entire JCEF tool window.
+- **Commit-attribution drill-down (per-file AI lines + Notes "show original") returned nothing.**
+  `list_ai_lines_in_commit` and `show_ai_note` parsed `refs/notes/ai` as pure JSON and returned shapes that
+  didn't match the frontend contracts, so `status` was never `ok` → silent 0 / fail. Both now parse the real
+  note format (text attestation section + `---` + JSON metadata, per upstream `notes_ai.rs`) and return the
+  correct `AiLinesResult` / `ShowNoteResult` tagged unions.
+- **Gutter "Blame" showed no model / silently failed.** `agent_id` is an object `{tool,id,model}`, but the
+  editor Blame action and the native Annotate "AI" column called `.asString` on it →
+  `UnsupportedOperationException` → "AI attribution failed" / the column vanished. Both now read
+  `agent_id.model`.
+- **"Select folder" did nothing on some machines (P1).** The native folder chooser ran with the default
+  modality from a pooled thread; on some window managers (Linux-Wayland / multi-monitor Windows) the modal
+  dialog could open unfocused or behind the main window. It now runs with `ModalityState.any()` and logs
+  open/result to idea.log for diagnosis.
+
 ## [0.4.4] - 2026-06-05
 
 ### Fixed

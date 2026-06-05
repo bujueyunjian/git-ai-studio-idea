@@ -94,8 +94,10 @@ class AnnotateAttributionAction : AnAction() {
             val line1 = k.toIntOrNull() ?: continue
             val author = v.asString
             val isAi = promptRecords.has(author)
+            // agent_id 是对象 {tool,id,model},不能整体 .asString(会抛 UnsupportedOperationException)。取 model。
             val agent = if (isAi) {
-                promptRecords.getAsJsonObject(author)?.get("agent_id")?.takeIf { !it.isJsonNull }?.asString
+                promptRecords.getAsJsonObject(author)?.get("agent_id")?.takeIf { it.isJsonObject }?.asJsonObject
+                    ?.get("model")?.takeIf { it.isJsonPrimitive }?.asString
             } else null
             out[line1 - 1] = LineAttribution(isAi, agent, if (isAi) author else null)
         }
