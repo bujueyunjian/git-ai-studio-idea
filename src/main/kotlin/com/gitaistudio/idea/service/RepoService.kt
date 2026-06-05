@@ -74,11 +74,13 @@ class RepoService(private val project: Project) {
         return null
     }
 
-    private fun firstVcsGitRoot(): File? =
-        ProjectLevelVcsManager.getInstance(project).allVcsRoots.asSequence()
-            .map { File(it.path) }
-            .mapNotNull { findGitRoot(it) }
-            .firstOrNull()
+    private fun firstVcsGitRoot(): File? {
+        for (vcsRoot in ProjectLevelVcsManager.getInstance(project).allVcsRoots) {
+            val gitRoot = findGitRoot(File(vcsRoot.path))
+            if (gitRoot != null) return gitRoot
+        }
+        return null
+    }
 
     companion object {
         fun getInstance(project: Project): RepoService = project.getService(RepoService::class.java)
