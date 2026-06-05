@@ -17,7 +17,7 @@ IDE-native feature the desktop app can't offer: **per-line AI attribution right 
 - **People** — per-author breakdown (AI share, commits, drill-down) over a time window.
 - **Notes** — the `refs/notes/ai` authorship log viewer (prompts, sessions, attestations).
 - **Diagnostics & install** — git-ai presence/version, environment health (`git-ai debug`).
-- **In-editor line attribution (gutter)** — run `git-ai blame-analysis` on the current file and mark
+- **In-editor line attribution (gutter)** — run `git-ai blame --json` on the current file and mark
   each line in the gutter: **AI → purple, you → blue** (the same locked color invariant as the desktop
   Ink-pet — color *is* data). Right-click in the editor → **Toggle AI Attribution (Git AI)**.
 
@@ -38,7 +38,7 @@ This is a Tauri → IntelliJ port that **reuses the entire git-ai-studio React U
                 ▼
    Kotlin CommandDispatcher  ──shells──▶  git-ai / git  (LC_ALL=C, --json)
                 │
-                └─ Editor gutter annotator (native LineAnnotation) ─▶ git-ai blame-analysis
+                └─ Editor gutter annotator (native LineAnnotation) ─▶ git-ai blame --json
 ```
 
 - **UI reuse via transport swap.** The desktop frontend talks to a Tauri backend through `@tauri-apps/*`.

@@ -55,14 +55,14 @@
                 class="com.gitaistudio.idea.editor.AnnotateAttributionAction"
                 icon="/icons/toolwindow.svg"
                 text="Blame"
-                description="Toggle per-line AI (purple) vs. human (blue) authorship in the gutter, via git-ai blame-analysis">
+                description="Toggle per-line AI (purple) vs. human (blue) authorship in the gutter, via git-ai blame --json">
             <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
         </action>
         <action id="GitAiStudio.FileAiSummary"
                 class="com.gitaistudio.idea.editor.FileAiSummaryAction"
                 icon="/icons/toolwindow.svg"
                 text="Stats"
-                description="Show this file's AI share inline (committed + working tree), via git-ai stats/blame-analysis"/>
+                description="Show this file's AI share inline (committed + working tree), via git-ai stats/blame --json"/>
         <action id="GitAiStudio.ViewFileAttribution"
                 class="com.gitaistudio.idea.editor.ViewFileAttributionAction"
                 icon="/icons/toolwindow.svg"

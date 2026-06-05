@@ -1219,6 +1219,7 @@
     "hooks": "Hooks",
     "logs": "Logs",
     "manual": "User manual",
+    "settings": "Settings",
     "footer": "Parsed locally, nothing uploaded"
   },
   "rail": {
@@ -1372,6 +1373,13 @@
       "statusEnabled": "Enabled (default)",
       "statusDisabled": "Disabled (disable_auto_updates=true)",
       "goEdit": "Go edit →"
+    },
+    "cache": {
+      "title": "Stats cache",
+      "description": "Attribution stats are cached in-memory per session. Clear the current repo's cache to force a recompute.",
+      "clear": "Clear cache",
+      "clearSuccess": "Cleared {{count}} cached entries",
+      "clearFailed": "Failed to clear cache"
     },
     "onboarding": {
       "title": "First-run guide",

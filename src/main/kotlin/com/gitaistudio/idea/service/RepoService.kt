@@ -3,6 +3,7 @@ package com.gitaistudio.idea.service
 import com.gitaistudio.idea.cli.GitCli
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vcs.ProjectLevelVcsManager
 import java.io.File
 
 /**
@@ -15,8 +16,8 @@ class RepoService(private val project: Project) {
 
     fun currentRepoDir(): File? {
         selectedPath?.let { p -> File(p).takeIf { it.isDirectory }?.let { return it } }
-        val base = project.basePath ?: return null
-        return findGitRoot(File(base))
+        val base = project.basePath
+        return base?.let { findGitRoot(File(it)) } ?: firstVcsGitRoot()
     }
 
     fun selectRepo(path: String): File? {
@@ -72,6 +73,12 @@ class RepoService(private val project: Project) {
         }
         return null
     }
+
+    private fun firstVcsGitRoot(): File? =
+        ProjectLevelVcsManager.getInstance(project).allVcsRoots.asSequence()
+            .map { File(it.path) }
+            .mapNotNull { findGitRoot(it) }
+            .firstOrNull()
 
     companion object {
         fun getInstance(project: Project): RepoService = project.getService(RepoService::class.java)

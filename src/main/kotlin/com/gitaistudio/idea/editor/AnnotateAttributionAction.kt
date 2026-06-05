@@ -5,8 +5,6 @@ import com.gitaistudio.idea.cli.GitAiCli
 import com.gitaistudio.idea.cli.GitAiNotFound
 import com.gitaistudio.idea.service.GitAiSettings
 import com.gitaistudio.idea.service.RepoService
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -25,7 +23,7 @@ import java.io.File
 import java.nio.file.Paths
 
 /**
- * 切换当前编辑器的"AI 行级归因"gutter:对当前文件跑 `git-ai blame-analysis`(HEAD),
+ * 切换当前编辑器的"AI 行级归因"gutter:对当前文件跑 `git-ai blame --json`(HEAD),
  * 把 AI 行标紫、人工行标蓝。再次触发关闭。这是 IDE 独有、桌面版做不到的差异化能力。
  */
 class AnnotateAttributionAction : AnAction() {
@@ -52,6 +50,7 @@ class AnnotateAttributionAction : AnAction() {
             ?: return notify(project, GitAiBundle.message("action.annotate.notRepo"))
         val rel = relativePath(repo, vfile)
             ?: return notify(project, GitAiBundle.message("action.annotate.notRepo"))
+        val totalLines = editor.document.lineCount
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, GitAiBundle.message("action.annotate.running"), true) {
             private var result: Map<Int, LineAttribution>? = null
@@ -60,10 +59,10 @@ class AnnotateAttributionAction : AnAction() {
             override fun run(indicator: ProgressIndicator) {
                 try {
                     val cli = GitAiCli.resolve(repo, GitAiSettings.getInstance().gitAiPath)
-                    val r = cli.blameAnalysis(rel, emptyList(), "HEAD")
-                    if (r.timedOut) { error = "git-ai blame-analysis timed out"; return }
+                    val r = cli.blameJson(rel, emptyList(), "HEAD")
+                    if (r.timedOut) { error = "git-ai blame timed out"; return }
                     if (!r.ok) { error = r.stderr.ifBlank { "exit ${r.exitCode}" }; return }
-                    result = parse(r.stdout)
+                    result = BlameAttributionSupport.parseLineAttributions(r.stdout, totalLines)
                 } catch (ex: GitAiNotFound) {
                     error = "git-ai not found on PATH"
                 } catch (ex: Throwable) {
@@ -83,25 +82,6 @@ class AnnotateAttributionAction : AnAction() {
                 }
             }
         })
-    }
-
-    private fun parse(stdout: String): Map<Int, LineAttribution> {
-        val root = runCatching { JsonParser.parseString(stdout.trim().ifBlank { "{}" }).asJsonObject }.getOrDefault(JsonObject())
-        val lineAuthors = root.getAsJsonObject("line_authors") ?: JsonObject()
-        val promptRecords = root.getAsJsonObject("prompt_records") ?: JsonObject()
-        val out = HashMap<Int, LineAttribution>()
-        for ((k, v) in lineAuthors.entrySet()) {
-            val line1 = k.toIntOrNull() ?: continue
-            val author = v.asString
-            val isAi = promptRecords.has(author)
-            // agent_id 是对象 {tool,id,model},不能整体 .asString(会抛 UnsupportedOperationException)。取 model。
-            val agent = if (isAi) {
-                promptRecords.getAsJsonObject(author)?.get("agent_id")?.takeIf { it.isJsonObject }?.asJsonObject
-                    ?.get("model")?.takeIf { it.isJsonPrimitive }?.asString
-            } else null
-            out[line1 - 1] = LineAttribution(isAi, agent, if (isAi) author else null)
-        }
-        return out
     }
 
     private fun relativePath(repo: File, vfile: VirtualFile): String? {

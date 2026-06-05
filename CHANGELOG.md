@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-06-05
+
+### Fixed
+
+- **Right-click Blame failed on git-ai 1.5.x.** The editor gutter, native Annotate column, status bar, and
+  file AI-share popup now call the public `git-ai blame --json` command instead of the removed internal
+  `blame-analysis` JSON payload path, fixing `Invalid JSON payload: key must be a string`.
+- **Dashboard default repository.** When no Dashboard aggregate set has been explicitly configured, the IDE
+  plugin now uses the current project repository by default; if an IDEA project has multiple Git roots, it
+  falls back to the first IDE VCS root.
+- **Repository navigation.** The Repo page is again registered in the runtime router and sidebar, so
+  "Go to Repositories" buttons no longer fall back to Dashboard.
+- **Settings i18n.** The sidebar Settings label and the simplified Settings cache section now use locale
+  keys instead of rendering raw `nav.settings` / hand-written language branches.
+
 ## [0.4.5] - 2026-06-05
 
 ### Fixed

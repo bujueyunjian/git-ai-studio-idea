@@ -25,26 +25,22 @@ class GitAiCli(private val exe: String, private val repoDir: File?) {
     fun statsRange(startSha: String, endSha: String): ProcResult =
         run(listOf("stats", "$startSha..$endSha", "--json"), 180_000)
 
-    /**
-     * `git-ai blame-analysis --json '<payload>'`。
-     * options 与桌面版 blame.rs 完全一致 —— 尤其 `use_prompt_hashes_as_names=true`:
-     * 否则 line_authors 的 value 是作者名而非 prompt hash,与 prompt_records 的 key 对不上,AI 行会被全丢。
-     */
-    fun blameAnalysis(file: String, ranges: List<Pair<Int, Int>>, newestCommit: String): ProcResult {
-        val options = JsonObject().apply {
-            add("line_ranges", com.google.gson.JsonArray().apply {
-                ranges.forEach { (a, b) -> add(com.google.gson.JsonArray().apply { add(a); add(b) }) }
-            })
-            addProperty("newest_commit", newestCommit)
-            addProperty("return_human_authors_as_human", true)
-            addProperty("split_hunks_by_ai_author", false)
-            addProperty("use_prompt_hashes_as_names", true)
+    /** `git-ai blame <file> --json`;指定历史 ref 时走 git blame 兼容形态 `git-ai blame <ref> -- <file> --json`。 */
+    fun blameJson(file: String, ranges: List<Pair<Int, Int>>, newestCommit: String): ProcResult {
+        val args = buildList {
+            add("blame")
+            add("--json")
+            ranges.forEach { (start, end) ->
+                add("-L")
+                add("$start,$end")
+            }
+            if (newestCommit.isNotBlank() && newestCommit != "HEAD") {
+                add(newestCommit)
+                add("--")
+            }
+            add(file)
         }
-        val payload = JsonObject().apply {
-            addProperty("file_path", file)
-            add("options", options)
-        }
-        return run(listOf("blame-analysis", "--json", payload.toString()), 45_000)
+        return run(args, 45_000)
     }
 
     fun show(sha: String): ProcResult = run(listOf("show", sha.trim()), 15_000)

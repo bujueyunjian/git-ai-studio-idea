@@ -1219,6 +1219,7 @@
     "hooks": "Hooks 配置",
     "logs": "日志",
     "manual": "用户手册",
+    "settings": "设置",
     "footer": "本机解析,不上传数据"
   },
   "rail": {
@@ -1372,6 +1373,13 @@
       "statusEnabled": "启用(默认)",
       "statusDisabled": "已禁用(disable_auto_updates=true)",
       "goEdit": "前往修改 →"
+    },
+    "cache": {
+      "title": "统计缓存",
+      "description": "归因统计按会话缓存于内存,关闭 IDE 即清。可手动清除当前仓库的缓存以强制重算。",
+      "clear": "清除缓存",
+      "clearSuccess": "已清除 {{count}} 条缓存",
+      "clearFailed": "清除缓存失败"
     },
     "onboarding": {
       "title": "首次引导",

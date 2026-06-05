@@ -204,6 +204,8 @@ export interface AppSettings {
   pet: PetConfig;
   /** 显式勾选纳入跨仓聚合的仓库路径集合(M1)。与 recent_repos / current_repo 正交。 */
   aggregate_repos: string[];
+  /** false/缺失 = IDE 插件内首次使用当前项目仓库作为 Dashboard 默认聚合集。 */
+  aggregate_repos_explicit?: boolean;
   /** **已废弃**:历史顶层位置,后端 load 时迁移到 notifications.cc_switch_auto_repair。 */
   cc_switch_auto_repair?: boolean | null;
 }
@@ -676,7 +678,7 @@ export interface BlamePayload {
   lines: Record<string, string>;
   prompts: Record<string, BlamePromptRecord>;
   metadata: BlameMetadata;
-  /** 上游 blame_hunks 解析后的全行作者归因(AI 行 + 非 AI 行都覆盖)。 */
+  /** 上游 hunks 解析后的全行作者归因(AI 行 + 非 AI 行都覆盖)。 */
   hunks: BlameHunk[];
 }
 

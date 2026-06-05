@@ -16,7 +16,7 @@
 - **People** —— 按作者的归因细分(AI 占比、提交数、下钻)。
 - **Notes** —— `refs/notes/ai` 归因日志查看(prompts / sessions / attestations)。
 - **诊断与安装** —— git-ai 是否就绪 / 版本、环境健康(`git-ai debug`)。
-- **编辑器内行级归因(gutter)** —— 对当前文件跑 `git-ai blame-analysis`,在行号槽标出每行:
+- **编辑器内行级归因(gutter)** —— 对当前文件跑 `git-ai blame --json`,在行号槽标出每行:
   **AI → 紫,你 → 蓝**(与桌面墨宠同一把锁死的颜色不变量,"形象即数据")。编辑器右键 → **Toggle AI Attribution (Git AI)**。
 
 ## 架构
@@ -36,7 +36,7 @@
                 ▼
    Kotlin CommandDispatcher  ──shell──▶  git-ai / git(LC_ALL=C,--json)
                 │
-                └─ 编辑器 gutter 归因(原生 LineAnnotation) ─▶ git-ai blame-analysis
+                └─ 编辑器 gutter 归因(原生 LineAnnotation) ─▶ git-ai blame --json
 ```
 
 - **换传输层即复用 UI。** 桌面前端通过 `@tauri-apps/*` 调 Tauri 后端;这里用 Vite `resolve.alias`

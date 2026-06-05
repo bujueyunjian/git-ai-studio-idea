@@ -3,7 +3,7 @@
 // Blame 页(行级停靠面板)与 Stats 页(commit 文件逐行弹窗)共用同一份呈现:
 // tool::model + human_author + 仓库级 accepted/overriden/additions/deletions + other_files + commits。
 // `accepted_lines / overriden_lines` 是**仓库级累计**(不是本行/本文件),必标 scope 警示,口径对齐
-// 上游 git-ai blame-analysis。
+// 上游 git-ai blame --json。
 
 import { useTranslation } from "react-i18next";
 

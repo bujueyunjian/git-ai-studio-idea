@@ -197,7 +197,7 @@ class CommandDispatcher(
     }
 
     private fun getAggregateRepos(): JsonElement {
-        val paths = settings.appSettings().strArray("aggregate_repos")
+        val paths = aggregateRepoPaths()
         return JsonUtil.arr(paths.map { p ->
             val dir = File(p)
             val valid = dir.isDirectory && File(dir, ".git").exists()
@@ -212,8 +212,17 @@ class CommandDispatcher(
     private fun setAggregateRepos(args: JsonObject): JsonElement {
         val obj = settings.appSettings()
         obj.add("aggregate_repos", JsonUtil.arr(args.strArray("repos").map { JsonPrimitive(it) }))
+        obj.addProperty("aggregate_repos_explicit", true)
         settings.saveAppSettings(obj)
         return JsonNull.INSTANCE
+    }
+
+    private fun aggregateRepoPaths(): List<String> {
+        val obj = settings.appSettings()
+        val configured = obj.strArray("aggregate_repos")
+        val explicit = obj.bool("aggregate_repos_explicit", false)
+        if (explicit || configured.isNotEmpty()) return configured
+        return repoService.currentRepoDir()?.let { listOf(it.absolutePath) } ?: emptyList()
     }
 
     /**
@@ -467,9 +476,7 @@ class CommandDispatcher(
 
     /** 跨仓聚合:无显式聚合集时退化为 [当前仓库],使 IDE 内 Dashboard 默认即可用。 */
     private fun getAggregateHistory(range: JsonObject, onlyMine: Boolean): JsonElement {
-        val configured = settings.appSettings().strArray("aggregate_repos")
-            .map { File(it) }.filter { it.isDirectory }
-        val repos = configured.ifEmpty { listOfNotNull(repoService.currentRepoDir()) }
+        val repos = aggregateRepoPaths().map { File(it) }.filter { it.isDirectory }
         if (repos.isEmpty()) return degraded("no_repos_selected", "reason")
         val start = System.currentTimeMillis()
         val (startMs, endMs) = resolveWindow(range)
@@ -519,9 +526,7 @@ class CommandDispatcher(
     }
 
     private fun getAggregateWorkingStatus(): JsonElement {
-        val configured = settings.appSettings().strArray("aggregate_repos")
-            .map { File(it) }.filter { it.isDirectory }
-        val repos = configured.ifEmpty { listOfNotNull(repoService.currentRepoDir()) }
+        val repos = aggregateRepoPaths().map { File(it) }.filter { it.isDirectory }
         val start = System.currentTimeMillis()
         val perRepo = JsonArray()
         val failedRepos = JsonArray()
@@ -795,8 +800,8 @@ class CommandDispatcher(
             val pair = it.asJsonArray
             if (pair.size() == 2) pair[0].asInt to pair[1].asInt else null
         } ?: emptyList()
-        val r = gitAi.blameAnalysis(file, ranges, ref)
-        if (r.timedOut) throw DispatchError("git-ai blame-analysis timed out")
+        val r = gitAi.blameJson(file, ranges, ref)
+        if (r.timedOut) throw DispatchError("git-ai blame timed out")
         if (!r.ok) return blameDegraded("file_not_in_head", JsonUtil.obj("file" to file))
         return JsonUtil.obj("status" to "ok", "payload" to transformBlame(parseJsonObjectOrEmpty(r.stdout)))
     }
@@ -944,32 +949,10 @@ class CommandDispatcher(
         return r.ok && r.stdout.trim().split(' ').filter { it.isNotBlank() }.size > 1
     }
 
-    /** git-ai blame-analysis 结果 → 前端 BlamePayload。AI 行(value 是 prompt hash)压缩为连续区间。 */
+    /** git-ai blame --json 结果 → 前端 BlamePayload。`lines` 只包含 AI 行。 */
     private fun transformBlame(result: JsonObject): JsonObject {
-        val lineAuthors = result.getAsJsonObject("line_authors") ?: JsonObject()
-        val promptRecords = result.getAsJsonObject("prompt_records") ?: JsonObject()
-        val aiByLine = sortedMapOf<Int, String>()
-        for ((k, v) in lineAuthors.entrySet()) {
-            val line = k.toIntOrNull() ?: continue
-            val author = v.asString
-            if (promptRecords.has(author)) aiByLine[line] = author
-        }
-        val lines = JsonObject()
-        var runStart = -1; var prev = -1; var prevId: String? = null
-        fun flush() {
-            if (runStart > 0 && prevId != null) {
-                val keyName = if (runStart == prev) "$runStart" else "$runStart-$prev"
-                lines.addProperty(keyName, prevId)
-            }
-        }
-        for ((line, id) in aiByLine) {
-            if (id == prevId && line == prev + 1) { prev = line }
-            else { flush(); runStart = line; prev = line; prevId = id }
-        }
-        flush()
-        // git-ai 1.5.2 的 prompt_records 不含 other_files/commits,顶层也无 metadata;
-        // 前端 BlamePromptDetails 把这两字段当必填读 .length → undefined 崩溃整窗。
-        // 对齐桌面版 convert_analysis(blame.rs):缺则补空数组、合成默认 metadata。
+        val lines = result.getAsJsonObject("lines") ?: JsonObject()
+        val promptRecords = result.getAsJsonObject("prompts") ?: JsonObject()
         for ((_, rec) in promptRecords.entrySet()) {
             val o = rec.takeIf { it.isJsonObject }?.asJsonObject ?: continue
             if (!o.has("other_files")) o.add("other_files", JsonArray())
@@ -981,7 +964,7 @@ class CommandDispatcher(
             "lines" to lines,
             "prompts" to promptRecords,
             "metadata" to metadata,
-            "hunks" to (result.getAsJsonArray("blame_hunks") ?: JsonArray()),
+            "hunks" to (result.getAsJsonArray("hunks") ?: JsonArray()),
         )
     }
 

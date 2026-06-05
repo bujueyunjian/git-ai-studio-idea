@@ -14,7 +14,16 @@
 // 未选中项文字 slate-700 / 图标 slate-500(可读不发灰),hover `bg-slate-100`。
 // 蓝色交互态刻意用字面 blue/slate 类(而非中性 token),与全站品牌蓝一致、观感更鲜明。
 
-import { Activity, LayoutDashboard, BarChart3, Users, FileJson, Plug, Settings } from "lucide-react";
+import {
+  Activity,
+  LayoutDashboard,
+  BarChart3,
+  Users,
+  FileJson,
+  FolderGit2,
+  Plug,
+  Settings,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,7 +47,7 @@ interface NavGroup {
 
 // 两组导航:label 中英规范 —— 能中文的中文(提交归因 / 作者归因 / 环境诊断 /
 // 安装升级 / Hooks 配置),专有名词保留英文(Dashboard / git notes / Checkpoints)。
-// 精简版导航:分析四页 + 环境诊断。安装/Hooks/日志/仓库/手册/设置已从 IDE 插件中移除。
+// 插件导航:分析页 + 仓库管理 + 环境诊断/Hooks/设置。
 const GROUPS: NavGroup[] = [
   {
     titleKey: "rail.group.analysis",
@@ -52,6 +61,7 @@ const GROUPS: NavGroup[] = [
   {
     titleKey: "rail.group.config",
     items: [
+      { id: "repo", labelKey: "nav.repo", icon: FolderGit2 },
       { id: "diagnostic", labelKey: "nav.diagnostic", icon: Activity },
       { id: "hooks", labelKey: "nav.hooks", icon: Plug },
       { id: "settings", labelKey: "nav.settings", icon: Settings },

@@ -13,7 +13,6 @@ import { clearStatsCache, getGitAiConfig } from "../lib/api";
  */
 export default function SettingsLean() {
   const { t } = useTranslation();
-  const isZh = i18n.language !== "en";
 
   const cfgQ = useQuery({
     queryKey: ["git_ai_config"],
@@ -25,10 +24,9 @@ export default function SettingsLean() {
 
   const clearM = useMutation({
     mutationFn: () => clearStatsCache("current_repo"),
-    onSuccess: (n) =>
-      toast.success(isZh ? `已清除 ${n} 条缓存` : `Cleared ${n} cached entries`),
+    onSuccess: (count) => toast.success(t("settings.cache.clearSuccess", { count })),
     onError: (e) =>
-      toast.error(isZh ? "清除缓存失败" : "Failed to clear cache", {
+      toast.error(t("settings.cache.clearFailed"), {
         description: (e as Error).message,
       }),
   });
@@ -72,13 +70,9 @@ export default function SettingsLean() {
           <div>
             <h2 className="flex items-center gap-2 text-sm font-medium">
               <Database className="h-4 w-4 text-slate-500" />
-              {isZh ? "统计缓存" : "Stats cache"}
+              {t("settings.cache.title")}
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {isZh
-                ? "归因统计按会话缓存于内存,关闭 IDE 即清。可手动清除当前仓库的缓存以强制重算。"
-                : "Attribution stats are cached in-memory per session. Clear the current repo's cache to force a recompute."}
-            </p>
+            <p className="mt-0.5 text-xs text-slate-500">{t("settings.cache.description")}</p>
           </div>
           <button
             type="button"
@@ -86,7 +80,7 @@ export default function SettingsLean() {
             onClick={() => clearM.mutate()}
             className="shrink-0 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted disabled:opacity-60"
           >
-            {isZh ? "清除缓存" : "Clear cache"}
+            {t("settings.cache.clear")}
           </button>
         </div>
       </section>

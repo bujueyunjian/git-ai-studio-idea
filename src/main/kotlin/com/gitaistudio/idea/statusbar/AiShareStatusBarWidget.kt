@@ -1,11 +1,12 @@
 package com.gitaistudio.idea.statusbar
 
 import com.gitaistudio.idea.cli.GitAiCli
+import com.gitaistudio.idea.editor.BlameAttributionSupport
 import com.gitaistudio.idea.editor.GitAiActionSupport
 import com.gitaistudio.idea.service.GitAiSettings
 import com.gitaistudio.idea.service.RepoService
 import com.gitaistudio.idea.toolwindow.WebUiPanel
-import com.google.gson.JsonParser
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
@@ -65,6 +66,7 @@ class AiShareStatusBarWidget(private val project: Project) :
             update(DEFAULT_TEXT, "Git AI · open a file to see its AI share")
             return
         }
+        val totalLines = FileDocumentManager.getInstance().getDocument(file)?.lineCount ?: 0
         ApplicationManager.getApplication().executeOnPooledThread {
             val repo = RepoService.getInstance(project).currentRepoDir()
             val rel = repo?.let { GitAiActionSupport.relativePath(it, file) }
@@ -78,35 +80,21 @@ class AiShareStatusBarWidget(private val project: Project) :
                 update(DEFAULT_TEXT, "Git AI · git-ai not found on PATH")
                 return@executeOnPooledThread
             }
-            val r = cli.blameAnalysis(rel, emptyList(), "HEAD")
+            val r = cli.blameJson(rel, emptyList(), "HEAD")
             if (!r.ok) {
                 update(DEFAULT_TEXT, "Git AI · attribution unavailable")
                 return@executeOnPooledThread
             }
-            val (ai, total) = countAi(r.stdout)
+            val share = BlameAttributionSupport.fileShare(r.stdout, totalLines)
+            val ai = share.ai
+            val total = share.total
             if (total == 0) {
                 update(DEFAULT_TEXT, "Git AI · no attributed lines in ${file.name}")
             } else {
-                val pct = (ai * 100 + total / 2) / total
+                val pct = share.pct
                 update("AI $pct%", "Git AI · ${file.name}: AI $ai · You ${total - ai} (of $total attributed lines) — click to open")
             }
         }
-    }
-
-    /** 解析 blame-analysis:AI 行 = line_authors 的 value 是 prompt_records 的 key;total = 有归因的行数。 */
-    private fun countAi(stdout: String): Pair<Int, Int> {
-        val root = runCatching { JsonParser.parseString(stdout.trim().ifBlank { "{}" }).asJsonObject }.getOrNull()
-            ?: return 0 to 0
-        val lineAuthors = root.getAsJsonObject("line_authors") ?: return 0 to 0
-        val promptRecords = root.getAsJsonObject("prompt_records")
-        var ai = 0
-        var total = 0
-        for ((_, v) in lineAuthors.entrySet()) {
-            total++
-            val author = v.asString
-            if (promptRecords?.has(author) == true) ai++
-        }
-        return ai to total
     }
 
     private fun update(newText: String, newTooltip: String) {

@@ -1,6 +1,6 @@
 // BlamePayload → 逐行渲染数据的纯派生:AI 行 promptId 索引 + 每行作者/模型标签。
 // 从原 Blame 页 / Stats 弹窗两处逐字节重复的实现抽出,单一权威、可单测。
-// 口径:`lines` 的 key 形如 "12" 或 "12-34"(上游 blame-analysis),命中即标 AI;
+// 口径:`lines` 的 key 形如 "12" 或 "12-34"(上游 git-ai blame --json),命中即标 AI;
 // 其余行按 hunks 的 git 作者着色。AI 行标模型(tool::model),人写行标作者。
 
 import type { BlameLineAuthor } from "../components/BlameCodeView";

@@ -13,6 +13,7 @@ import DashboardPage from "./pages/Dashboard";
 import PeoplePage from "./pages/People";
 import StatsPage from "./pages/Stats";
 import NotesPage from "./pages/Notes";
+import RepoPage from "./pages/Repo";
 import HooksPage from "./pages/Hooks";
 import SettingsPage from "./pages/SettingsLean";
 
@@ -78,6 +79,8 @@ function renderPage(r: ReturnType<typeof useRouter>["current"]) {
       return <PeoplePage />;
     case "notes":
       return <NotesPage />;
+    case "repo":
+      return <RepoPage />;
     case "diagnostic":
       return <DiagnosticPage />;
     case "hooks":

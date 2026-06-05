@@ -88,7 +88,8 @@ class GitAiSettings : PersistentStateComponent<GitAiSettings.State> {
             "opacity": null,
             "alert_interval_sec": null
           },
-          "aggregate_repos": []
+          "aggregate_repos": [],
+          "aggregate_repos_explicit": false
         }
         """
     }
