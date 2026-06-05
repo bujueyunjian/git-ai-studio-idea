@@ -76,7 +76,7 @@ class RepoService(private val project: Project) {
 
     private fun firstVcsGitRoot(): File? {
         for (vcsRoot in ProjectLevelVcsManager.getInstance(project).allVcsRoots) {
-            val gitRoot = findGitRoot(File(vcsRoot.path))
+            val gitRoot = findGitRoot(File(vcsRoot.path.path))
             if (gitRoot != null) return gitRoot
         }
         return null
