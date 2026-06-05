@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.7] - 2026-06-05
+
+### Fixed
+
+- **Plugin version always displayed as v0.1.0.** The webview read `window.__GITAI_PLUGIN_VERSION__` in React
+  effects before the `onLoadEnd` bootstrap injection ran, hit the hard-coded `"0.1.0"` fallback, and never
+  re-read. The version (and `__GITAI_HOST__`) is now injected as an inline `<script>` while serving
+  `index.html`, so the globals are ready before any read; the fallback is an empty string instead of a fake
+  old version.
+- **Settings "Source code:" link had no visible URL.** The About card now shows a clickable
+  `bujueyunjian/git-ai-studio-idea` link with an external-link icon (matching the desktop Settings style).
+- **Blame drill-down on a historical commit reported "file not in this commit".** `git-ai blame` does not
+  accept a commit ref (`Unknown option: --`), so every non-HEAD drill-down failed and the failure was
+  mislabeled as `file_not_in_head`. The webview blame path now calls `git-ai blame-analysis --json
+  '<payload>'` with `options.newest_commit` (mirroring the desktop `run_blame_analysis`/`convert_analysis`,
+  incl. the mandatory `use_prompt_hashes_as_names`), with `rev-parse` / `cat-file -e` pre-checks separating
+  `ref_not_found` / `file_not_in_head` from real failures (which now surface as loud errors). `blameJson` is
+  narrowed to HEAD-only for the native gutter / Annotate / status-bar callers.
+
 ## [0.4.6] - 2026-06-05
 
 ### Fixed
