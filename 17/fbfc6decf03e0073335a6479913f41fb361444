@@ -1,0 +1,39 @@
+src/main/kotlin/com/gitaistudio/idea/toolwindow/WebUiPanel.kt
+  s_bdd5a3858da3ad::t_097e8e35740d17 112-113
+src/main/kotlin/com/gitaistudio/idea/bridge/CommandDispatcher.kt
+  s_bdd5a3858da3ad::t_52f24fc18aefd4 799-807,812-817
+  s_bdd5a3858da3ad::t_b0f45f4450b015 963-967,969-997,1001,1005-1008
+webview/src/pages/SettingsLean.tsx
+  s_bdd5a3858da3ad::t_cd3c9b95c94611 2
+  s_bdd5a3858da3ad::t_7dfec384a534fc 93,95-103
+webview/src/lib/api.ts
+  s_bdd5a3858da3ad::t_df7eb76a8242bc 161
+webview/src/bridge/tauri-app.ts
+  s_bdd5a3858da3ad::t_f83986d817135b 2-3,5
+src/main/kotlin/com/gitaistudio/idea/cli/GitCli.kt
+  s_bdd5a3858da3ad::t_42d7d20f4ea878 49-52
+src/main/kotlin/com/gitaistudio/idea/toolwindow/WebSchemeHandlerFactory.kt
+  s_bdd5a3858da3ad::t_9acd0d3c92739f 80-81
+  s_bdd5a3858da3ad::t_b9b2400908365a 3-4
+  s_bdd5a3858da3ad::t_2be694bc840726 52-55
+  s_bdd5a3858da3ad::t_0bdc655a3b444b 82,88-96
+src/main/kotlin/com/gitaistudio/idea/cli/GitAiCli.kt
+  s_bdd5a3858da3ad::t_08952ca38f18b9 29-30,43-65
+  s_bdd5a3858da3ad::t_2c25cdee4bfb98 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "17fbfc6decf03e0073335a6479913f41fb361444",
+  "prompts": {},
+  "sessions": {
+    "s_bdd5a3858da3ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "583211c5-7e5b-46ed-926f-2377700abed9",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
