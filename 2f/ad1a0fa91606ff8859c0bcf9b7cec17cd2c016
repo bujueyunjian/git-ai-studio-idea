@@ -1,0 +1,19 @@
+src/main/kotlin/com/gitaistudio/idea/service/RepoService.kt
+  s_3566b7177e1fee::t_326070317c458b 79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2fad1a0fa91606ff8859c0bcf9b7cec17cd2c016",
+  "prompts": {},
+  "sessions": {
+    "s_3566b7177e1fee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa13013c-c9d2-44b9-bf1c-c7adbd1e8f8d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "zephyr.li <zephyr.li@jtexpress.com>"
+    }
+  }
+}
