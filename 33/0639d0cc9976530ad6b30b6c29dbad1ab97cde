@@ -1,0 +1,81 @@
+webview/src/lib/blameLines.ts
+  s_6ca405a0213a6b::t_33edffa7533246 3
+webview/src/components/Layout/Rail.tsx
+  s_6ca405a0213a6b::t_52ae5b8a0107ae 17-26,64
+  s_6ca405a0213a6b::t_925a431e0f6549 50
+gradle.properties
+  s_6ca405a0213a6b::t_2ba7dfd0dca23d 3
+webview/src/routerCore.ts
+  s_6ca405a0213a6b::t_b35c541c5d409d 21-30
+  s_6ca405a0213a6b::t_925a431e0f6549 18
+webview/src/pages/SettingsLean.tsx
+  s_6ca405a0213a6b::t_d1249793de500f 27,29,73,75,83
+CHANGELOG.md
+  s_6ca405a0213a6b::t_2ba7dfd0dca23d 8-21
+src/main/kotlin/com/gitaistudio/idea/bridge/CommandDispatcher.kt
+  s_6ca405a0213a6b::t_ecca84f66c7e3f 803-804
+  s_6ca405a0213a6b::t_d932329026d85c 952,954-955,967
+  s_6ca405a0213a6b::t_f256266c8f6e37 200,215,220-227,479,529
+src/main/kotlin/com/gitaistudio/idea/statusbar/AiShareStatusBarWidget.kt
+  s_6ca405a0213a6b::t_01352017370230 9,69,88-90,94
+  s_6ca405a0213a6b::t_ecca84f66c7e3f 83
+  s_6ca405a0213a6b::t_8422eb22eaded5 4
+src/main/kotlin/com/gitaistudio/idea/editor/FileAiSummaryAction.kt
+  s_6ca405a0213a6b::t_ecca84f66c7e3f 59
+  s_6ca405a0213a6b::t_8b6a35de607e23 45,60,87-88
+  s_6ca405a0213a6b::t_33edffa7533246 23
+src/main/kotlin/com/gitaistudio/idea/annotate/AiAnnotationColumnProvider.kt
+  s_6ca405a0213a6b::t_ecca84f66c7e3f 29
+  s_6ca405a0213a6b::t_f8f3751f5bca51 5,18,31
+src/main/kotlin/com/gitaistudio/idea/cli/GitAiCli.kt
+  s_6ca405a0213a6b::t_33edffa7533246 27
+  s_6ca405a0213a6b::t_0e66db0d2fc3de 29-30,32-40,42
+  s_6ca405a0213a6b::t_5ab56b72743a6c 31
+  s_6ca405a0213a6b::t_ecca84f66c7e3f 28
+README.md
+  s_6ca405a0213a6b::t_269efbd2b39345 20,41
+README.zh-CN.md
+  s_6ca405a0213a6b::t_269efbd2b39345 19,39
+src/main/kotlin/com/gitaistudio/idea/service/GitAiSettings.kt
+  s_6ca405a0213a6b::t_fdcb22886a8b69 91-92
+src/main/kotlin/com/gitaistudio/idea/editor/BlameAttributionSupport.kt
+  s_6ca405a0213a6b::t_aec6db3473b521 6,11,23,28-30
+  s_6ca405a0213a6b::t_09cc3d471c8853 1-5,7-10,12,15,19-22,24-27,31-34,49-71
+  s_6ca405a0213a6b::t_5ab56b72743a6c 13-14,16-18,35-48
+src/main/kotlin/com/gitaistudio/idea/editor/AnnotateAttributionAction.kt
+  s_6ca405a0213a6b::t_52d83d30554044 53,65
+  s_6ca405a0213a6b::t_ecca84f66c7e3f 62-63
+  s_6ca405a0213a6b::t_33edffa7533246 26
+webview/src/i18n/locales/en.json
+  s_6ca405a0213a6b::t_b927b459934c6a 1222,1377-1383
+webview/src/components/BlamePromptDetails.tsx
+  s_6ca405a0213a6b::t_33edffa7533246 6
+webview/src/i18n/locales/zh-CN.json
+  s_6ca405a0213a6b::t_b927b459934c6a 1222,1377-1383
+webview/src/App.tsx
+  s_6ca405a0213a6b::t_127c4b4d56ab64 16,82-83
+src/main/kotlin/com/gitaistudio/idea/service/RepoService.kt
+  s_6ca405a0213a6b::t_0bf84334c4f1c2 6,77-82
+  s_6ca405a0213a6b::t_2c513d194f2f84 19-20
+webview/src/lib/types.ts
+  s_6ca405a0213a6b::t_43bcdad72e0fa1 207-208
+  s_6ca405a0213a6b::t_33edffa7533246 681
+webview/src/lib/api.ts
+  s_6ca405a0213a6b::t_33edffa7533246 161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "330639d0cc9976530ad6b30b6c29dbad1ab97cde",
+  "prompts": {},
+  "sessions": {
+    "s_6ca405a0213a6b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9679-1dc3-7ee0-98a3-0f00341e21c0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zephyr.li <zephyr.li@jtexpress.com>"
+    }
+  }
+}
