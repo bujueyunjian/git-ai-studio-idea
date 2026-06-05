@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-06-05
+
+### Fixed
+
+- **Blank blame popup.** In the Stats commit detail, clicking a file to open the line-level blame drill-down
+  showed an empty dialog: `read_file_at_*` returned `{path,binary,content,...}` instead of the expected
+  `{status:"ok",text,size}` (and mis-detected every text file as binary), and `get_blame*` returned the raw
+  payload instead of `{status:"ok",payload}`. Both now return the correct tagged-union shapes, so the file
+  content and AI overlay render.
+
 ## [0.4.3] - 2026-06-05
 
 ### Changed

@@ -716,29 +716,39 @@ class CommandDispatcher(
         return JsonUtil.obj("files" to JsonUtil.arr(lines.take(FILES_CAP).map { JsonPrimitive(it) }), "truncated" to truncated)
     }
 
+    /** ReadFileResult = {status:"ok", text, size} | {status:"degraded", reason}。前端 CodeMirror 读 text 渲染。 */
     private fun readFileAtRef(ref: String, file: String): JsonElement {
-        val dir = repoService.currentRepoDir() ?: throw DispatchError("No repository")
+        val dir = repoService.currentRepoDir() ?: return blameDegraded("repo_missing")
         val r = GitCli.resolve(dir).showFileAtRef(ref, file)
-        if (!r.ok) throw DispatchError("git show $ref:$file failed: ${r.stderr.ifBlank { "exit ${r.exitCode}" }}")
+        if (!r.ok) return blameDegraded("file_not_in_head", JsonUtil.obj("file" to file))
         val content = r.stdout
-        val isBinary = content.take(8000).contains(' ')
-        if (isBinary) return JsonUtil.obj("path" to file, "binary" to true, "content" to JsonNull.INSTANCE, "truncated" to false)
-        val truncated = content.length > MAX_FILE_BYTES
-        return JsonUtil.obj("path" to file, "binary" to false,
-            "content" to content.take(MAX_FILE_BYTES), "truncated" to truncated)
+        if (content.take(8000).any { it.code == 0 }) return blameDegraded("file_binary")
+        val bytes = content.toByteArray(Charsets.UTF_8)
+        if (bytes.size > MAX_FILE_BYTES) {
+            return blameDegraded("file_too_large", JsonUtil.obj("size" to bytes.size, "limit" to MAX_FILE_BYTES))
+        }
+        return JsonUtil.obj("status" to "ok", "text" to content, "size" to bytes.size)
     }
 
+    /** BlameResult = {status:"ok", payload: BlamePayload} | {status:"degraded", reason}。 */
     private fun getBlame(ref: String, file: String, args: JsonObject): JsonElement {
-        val dir = repoService.currentRepoDir() ?: throw DispatchError("No repository")
-        val gitAi = gitAiOrNull(dir) ?: throw DispatchError("git-ai not found")
+        val dir = repoService.currentRepoDir() ?: return blameDegraded("repo_missing")
+        val gitAi = gitAiOrNull(dir) ?: return blameDegraded("git_ai_missing")
         val ranges = args.get("ranges")?.takeIf { it.isJsonArray }?.asJsonArray?.mapNotNull {
             val pair = it.asJsonArray
             if (pair.size() == 2) pair[0].asInt to pair[1].asInt else null
         } ?: emptyList()
         val r = gitAi.blameAnalysis(file, ranges, ref)
         if (r.timedOut) throw DispatchError("git-ai blame-analysis timed out")
-        if (!r.ok) throw DispatchError("git-ai blame-analysis failed: ${r.stderr.ifBlank { "exit ${r.exitCode}" }}")
-        return transformBlame(parseJsonObjectOrEmpty(r.stdout))
+        if (!r.ok) return blameDegraded("file_not_in_head", JsonUtil.obj("file" to file))
+        return JsonUtil.obj("status" to "ok", "payload" to transformBlame(parseJsonObjectOrEmpty(r.stdout)))
+    }
+
+    /** Blame/ReadFile 的 degraded 包装:{status:"degraded", reason:{kind, ...extra}}。 */
+    private fun blameDegraded(kind: String, extra: JsonObject? = null): JsonObject {
+        val reason = extra ?: JsonObject()
+        reason.addProperty("kind", kind)
+        return JsonUtil.obj("status" to "degraded", "reason" to reason)
     }
 
     private fun getWhoami(): JsonElement {
