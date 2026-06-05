@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_bdd5a3858da3ad::t_9d71437d1ede90 8-26
+gradle.properties
+  s_bdd5a3858da3ad::t_c66a33b070de51 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "708c3f020a49fadf5289e3382f8e552f47eeeada",
+  "prompts": {},
+  "sessions": {
+    "s_bdd5a3858da3ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "583211c5-7e5b-46ed-926f-2377700abed9",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
