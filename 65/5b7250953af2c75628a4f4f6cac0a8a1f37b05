@@ -1,0 +1,19 @@
+src/main/kotlin/com/gitaistudio/idea/service/RepoService.kt
+  s_6ca405a0213a6b::t_17a3c2bca36bdc 77-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "655b7250953af2c75628a4f4f6cac0a8a1f37b05",
+  "prompts": {},
+  "sessions": {
+    "s_6ca405a0213a6b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9679-1dc3-7ee0-98a3-0f00341e21c0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zephyr.li <zephyr.li@jtexpress.com>"
+    }
+  }
+}
