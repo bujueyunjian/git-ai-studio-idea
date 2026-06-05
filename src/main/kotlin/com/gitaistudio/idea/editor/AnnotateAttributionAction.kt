@@ -59,7 +59,7 @@ class AnnotateAttributionAction : AnAction() {
             override fun run(indicator: ProgressIndicator) {
                 try {
                     val cli = GitAiCli.resolve(repo, GitAiSettings.getInstance().gitAiPath)
-                    val r = cli.blameJson(rel, emptyList(), "HEAD")
+                    val r = cli.blameJson(rel, emptyList())
                     if (r.timedOut) { error = "git-ai blame timed out"; return }
                     if (!r.ok) { error = r.stderr.ifBlank { "exit ${r.exitCode}" }; return }
                     result = BlameAttributionSupport.parseLineAttributions(r.stdout, totalLines)

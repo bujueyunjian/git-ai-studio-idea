@@ -46,6 +46,10 @@ class GitCli(private val exe: String, private val repoDir: File?) {
     fun showFileAtRef(ref: String, file: String): ProcResult =
         run(listOf("show", "$ref:$file"), 15_000)
 
+    /** 文件在 ref 下的存在性预检(blame 前置)。退出码 0 = 存在。 */
+    fun catFileExists(ref: String, file: String): ProcResult =
+        run(listOf("cat-file", "-e", "$ref:$file"), 5_000)
+
     fun statusPorcelainZ(): ProcResult =
         run(listOf("status", "--porcelain=v1", "-z"), 10_000)
 

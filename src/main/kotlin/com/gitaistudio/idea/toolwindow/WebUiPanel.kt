@@ -5,11 +5,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Key
@@ -111,14 +109,13 @@ class WebUiPanel(private val project: Project) : BorderLayoutPanel(), Disposable
         exec("window.__gitaiReceive && window.__gitaiReceive(${gson.toJson(ev)});")
     }
 
+    // 版本/宿主全局由 WebSchemeHandlerFactory 在 serve index.html 时注入(bundle 执行前已就绪),
+    // 这里只装命令桥与主题:它们依赖 jsQuery / IDE LAF,无法在 serve 期完成
     private fun injectBootstrap() {
         val query = jsQuery ?: return
-        val version = pluginVersion()
         val dark = currentThemeIsDark()
         val js = buildString {
             append("(function(){")
-            append("window.__GITAI_PLUGIN_VERSION__=").append(gson.toJson(version)).append(";")
-            append("window.__GITAI_HOST__='idea';")
             append("window.__gitaiSend=function(payload){").append(query.inject("payload")).append("};")
             append("if(Array.isArray(window.__gitaiQueue)){var q=window.__gitaiQueue.slice();window.__gitaiQueue=[];for(var i=0;i<q.length;i++){window.__gitaiSend(q[i]);}}")
             append("document.documentElement.classList.toggle('dark',").append(dark).append(");")
@@ -142,9 +139,6 @@ class WebUiPanel(private val project: Project) : BorderLayoutPanel(), Disposable
     }
 
     private fun currentThemeIsDark(): Boolean = !JBColor.isBright()
-
-    private fun pluginVersion(): String =
-        PluginManagerCore.getPlugin(PluginId.getId("com.gitaistudio.idea"))?.version ?: "0.1.0"
 
     /** 让原生侧(编辑器右键动作)驱动复用的 React 应用导航:直接切 hash,RouterProvider 监听 hashchange。 */
     fun navigateTo(hash: String) {

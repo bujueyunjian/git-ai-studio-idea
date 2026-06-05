@@ -1,5 +1,7 @@
 package com.gitaistudio.idea.toolwindow
 
+import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.ui.jcef.JBCefApp
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
@@ -47,6 +49,10 @@ class WebSchemeHandlerFactory : CefSchemeHandlerFactory {
 
         private val registered = AtomicBoolean(false)
 
+        /** 运行时插件版本(plugin.xml 的 version 由构建期 patch 自 gradle.properties 的 pluginVersion)。 */
+        fun pluginVersion(): String =
+            PluginManagerCore.getPlugin(PluginId.getId("com.gitaistudio.idea"))?.version ?: ""
+
         /** 全局注册一次。 */
         fun ensureRegistered() {
             if (!JBCefApp.isSupported()) return
@@ -71,10 +77,23 @@ private class WebResourceHandler(private val path: String) : CefResourceHandler 
             callback.cancel()
             return false
         }
-        data = bytes
+        // index.html 在回流前注入启动全局:前端 useEffect/运行时读取这些全局的时机
+        // 早于 load 级的 onLoadEnd(injectBootstrap);只有 serve 期写入才能保证任意读取点都已就绪
+        data = if (path == "index.html") injectStartupGlobals(bytes) else bytes
         mime = mimeFor(path)
         callback.Continue()
         return true
+    }
+
+    /** 把插件版本与宿主标识以 <script> 注入 <head> 起始处。 */
+    private fun injectStartupGlobals(bytes: ByteArray): ByteArray {
+        val version = WebSchemeHandlerFactory.pluginVersion().replace("\\", "\\\\").replace("\"", "\\\"")
+        val script = "<script>window.__GITAI_PLUGIN_VERSION__=\"$version\";window.__GITAI_HOST__=\"idea\";</script>"
+        val html = String(bytes, Charsets.UTF_8)
+        val idx = html.indexOf("<head>")
+        if (idx < 0) return bytes
+        return (html.substring(0, idx + "<head>".length) + script + html.substring(idx + "<head>".length))
+            .toByteArray(Charsets.UTF_8)
     }
 
     override fun getResponseHeaders(response: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {

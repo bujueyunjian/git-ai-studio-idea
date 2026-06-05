@@ -1,5 +1,6 @@
 package com.gitaistudio.idea.cli
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import java.io.File
 
@@ -25,8 +26,8 @@ class GitAiCli(private val exe: String, private val repoDir: File?) {
     fun statsRange(startSha: String, endSha: String): ProcResult =
         run(listOf("stats", "$startSha..$endSha", "--json"), 180_000)
 
-    /** `git-ai blame <file> --json`;指定历史 ref 时走 git blame 兼容形态 `git-ai blame <ref> -- <file> --json`。 */
-    fun blameJson(file: String, ranges: List<Pair<Int, Int>>, newestCommit: String): ProcResult {
+    /** `git-ai blame <file> --json`:HEAD 视角的逐行归因(原生侧批注列/状态栏等用)。 */
+    fun blameJson(file: String, ranges: List<Pair<Int, Int>>): ProcResult {
         val args = buildList {
             add("blame")
             add("--json")
@@ -34,13 +35,34 @@ class GitAiCli(private val exe: String, private val repoDir: File?) {
                 add("-L")
                 add("$start,$end")
             }
-            if (newestCommit.isNotBlank() && newestCommit != "HEAD") {
-                add(newestCommit)
-                add("--")
-            }
             add(file)
         }
         return run(args, 45_000)
+    }
+
+    /**
+     * `git-ai blame-analysis --json '<payload>'`:指定 commit 的逐行归因,对齐桌面版
+     * `src-tauri/src/git_ai/blame.rs::run_blame_analysis`。`git-ai blame` 不接受 commit ref
+     * (实测报 Unknown option),历史 commit 必须经 options.newest_commit 走本命令。
+     * `use_prompt_hashes_as_names` 必须为 true:否则上游 line_authors 的 value 是作者名而非
+     * prompt hash,与 prompt_records 求交恒空,AI 行会被全部丢弃。
+     */
+    fun blameAnalysisJson(file: String, ranges: List<Pair<Int, Int>>, newestCommit: String): ProcResult {
+        val lineRanges = JsonArray().apply {
+            ranges.forEach { (start, end) -> add(JsonArray().apply { add(start); add(end) }) }
+        }
+        val options = JsonObject().apply {
+            add("line_ranges", lineRanges)
+            addProperty("newest_commit", newestCommit)
+            addProperty("return_human_authors_as_human", true)
+            addProperty("split_hunks_by_ai_author", false)
+            addProperty("use_prompt_hashes_as_names", true)
+        }
+        val payload = JsonObject().apply {
+            addProperty("file_path", file)
+            add("options", options)
+        }
+        return run(listOf("blame-analysis", "--json", payload.toString()), 45_000)
     }
 
     fun show(sha: String): ProcResult = run(listOf("show", sha.trim()), 15_000)

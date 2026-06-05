@@ -80,7 +80,7 @@ class AiShareStatusBarWidget(private val project: Project) :
                 update(DEFAULT_TEXT, "Git AI · git-ai not found on PATH")
                 return@executeOnPooledThread
             }
-            val r = cli.blameJson(rel, emptyList(), "HEAD")
+            val r = cli.blameJson(rel, emptyList())
             if (!r.ok) {
                 update(DEFAULT_TEXT, "Git AI · attribution unavailable")
                 return@executeOnPooledThread

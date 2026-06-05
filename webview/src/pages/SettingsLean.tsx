@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Database, Info, Languages, RefreshCw } from "lucide-react";
+import { Database, ExternalLink, Info, Languages, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -90,14 +90,17 @@ export default function SettingsLean() {
         <h2 className="mb-1 flex items-center gap-2 text-sm font-medium">
           <Info className="h-4 w-4 text-slate-500" /> {t("settings.about.title")}
         </h2>
-        <a
-          href="https://github.com/bujueyunjian/git-ai-studio-idea"
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs text-primary hover:underline"
-        >
+        <p className="text-xs text-slate-500">
           {t("settings.about.sourceCode")}
-        </a>
+          <a
+            href="https://github.com/bujueyunjian/git-ai-studio-idea"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="ml-1 inline-flex items-center gap-0.5 text-primary hover:underline"
+          >
+            bujueyunjian/git-ai-studio-idea <ExternalLink className="h-3 w-3" />
+          </a>
+        </p>
         <p className="mt-1 text-[11px] text-slate-400">{t("settings.about.privacy")}</p>
       </section>
     </div>

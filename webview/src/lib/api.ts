@@ -158,7 +158,7 @@ export const clearStatsCache = (scope: CacheScope) => call<number>("clear_stats_
 export const getPeopleBreakdown = (range: TimeRange) =>
   call<PeopleBreakdownResult>("get_people_breakdown", { range });
 
-// Blame(P6/P10):后端使用上游 `git-ai blame --json` 机器命令。
+// Blame(P6/P10):后端使用上游 `git-ai blame-analysis --json`(commit 经 options.newest_commit 传入)。
 export const getBlame = (file: string, ranges: Array<[number, number]> | null) =>
   call<BlameResult>("get_blame", { file, ranges });
 export const listFilesAtHead = (sha: string | null) =>

@@ -796,14 +796,25 @@ class CommandDispatcher(
     private fun getBlame(ref: String, file: String, args: JsonObject): JsonElement {
         val dir = repoService.currentRepoDir() ?: return blameDegraded("repo_missing")
         val gitAi = gitAiOrNull(dir) ?: return blameDegraded("git_ai_missing")
+        // ref 校验 + 文件存在性预检(对齐桌面版 commands/blame.rs::get_blame_at_ref);
+        // 预检通过后 blame-analysis 的失败即真实故障,走响亮 Err 而非误报"文件不存在"
+        val git = GitCli.resolve(dir)
+        if (ref != "HEAD" && !git.revParseVerifyCommit(ref).ok) {
+            return blameDegraded("ref_not_found", JsonUtil.obj("ref" to ref))
+        }
+        if (!git.catFileExists(ref, file).ok) {
+            return blameDegraded("file_not_in_head", JsonUtil.obj("file" to file))
+        }
         val ranges = args.get("ranges")?.takeIf { it.isJsonArray }?.asJsonArray?.mapNotNull {
             val pair = it.asJsonArray
             if (pair.size() == 2) pair[0].asInt to pair[1].asInt else null
         } ?: emptyList()
-        val r = gitAi.blameJson(file, ranges, ref)
-        if (r.timedOut) throw DispatchError("git-ai blame timed out")
-        if (!r.ok) return blameDegraded("file_not_in_head", JsonUtil.obj("file" to file))
-        return JsonUtil.obj("status" to "ok", "payload" to transformBlame(parseJsonObjectOrEmpty(r.stdout)))
+        val r = gitAi.blameAnalysisJson(file, ranges, ref)
+        if (r.timedOut) throw DispatchError("git-ai blame-analysis timed out")
+        if (!r.ok) throw DispatchError("git-ai blame-analysis failed: ${r.stderr.ifBlank { "exit ${r.exitCode}" }}")
+        val parsed = runCatching { JsonParser.parseString(r.stdout).asJsonObject }
+            .getOrElse { throw DispatchError("git-ai blame-analysis returned invalid JSON") }
+        return JsonUtil.obj("status" to "ok", "payload" to transformBlame(parsed))
     }
 
     /** Blame/ReadFile 的 degraded 包装:{status:"degraded", reason:{kind, ...extra}}。 */
@@ -949,22 +960,52 @@ class CommandDispatcher(
         return r.ok && r.stdout.trim().split(' ').filter { it.isNotBlank() }.size > 1
     }
 
-    /** git-ai blame --json 结果 → 前端 BlamePayload。`lines` 只包含 AI 行。 */
+    /**
+     * git-ai blame-analysis 结果 → 前端 BlamePayload(对齐桌面版 blame.rs::convert_analysis):
+     * line_authors 只保留能命中 prompt_records 的 prompt hash(即 AI 行),
+     * 连续同 prompt 行压成 "13" / "15-25"(end inclusive)。
+     */
     private fun transformBlame(result: JsonObject): JsonObject {
-        val lines = result.getAsJsonObject("lines") ?: JsonObject()
-        val promptRecords = result.getAsJsonObject("prompts") ?: JsonObject()
-        for ((_, rec) in promptRecords.entrySet()) {
+        val lineAuthors = result.getAsJsonObject("line_authors") ?: JsonObject()
+        val promptRecords = result.getAsJsonObject("prompt_records") ?: JsonObject()
+        val aiEntries = lineAuthors.entrySet().mapNotNull { (key, value) ->
+            val line = key.toIntOrNull() ?: return@mapNotNull null
+            val author = value.takeIf { it.isJsonPrimitive }?.asString ?: return@mapNotNull null
+            if (promptRecords.has(author)) line to author else null
+        }.sortedBy { it.first }
+
+        val lines = JsonObject()
+        var start = -1
+        var end = -1
+        var promptId = ""
+        fun flush() {
+            if (start >= 0) lines.addProperty(if (start == end) "$start" else "$start-$end", promptId)
+        }
+        for ((line, prompt) in aiEntries) {
+            if (line == end + 1 && prompt == promptId) {
+                end = line
+                continue
+            }
+            flush()
+            start = line
+            end = line
+            promptId = prompt
+        }
+        flush()
+
+        val prompts = JsonObject()
+        for ((key, rec) in promptRecords.entrySet()) {
             val o = rec.takeIf { it.isJsonObject }?.asJsonObject ?: continue
             if (!o.has("other_files")) o.add("other_files", JsonArray())
             if (!o.has("commits")) o.add("commits", JsonArray())
+            prompts.add(key, o)
         }
-        val metadata = result.getAsJsonObject("metadata")
-            ?: JsonUtil.obj("is_logged_in" to false, "current_user" to JsonNull.INSTANCE)
         return JsonUtil.obj(
             "lines" to lines,
-            "prompts" to promptRecords,
-            "metadata" to metadata,
-            "hunks" to (result.getAsJsonArray("hunks") ?: JsonArray()),
+            "prompts" to prompts,
+            // blame-analysis 不含登录态;字段为满足前端 BlameMetadata 契约(同桌面版 convert_analysis)
+            "metadata" to JsonUtil.obj("is_logged_in" to false, "current_user" to JsonNull.INSTANCE),
+            "hunks" to (result.getAsJsonArray("blame_hunks") ?: JsonArray()),
         )
     }
 

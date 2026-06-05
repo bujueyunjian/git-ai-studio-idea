@@ -56,7 +56,7 @@ class FileAiSummaryAction : AnAction() {
                     return
                 }
                 // 已提交:本文件 blame
-                val committed = cli.blameJson(rel, emptyList(), "HEAD").let { r ->
+                val committed = cli.blameJson(rel, emptyList()).let { r ->
                     if (r.ok) fileShare(r.stdout, totalLines) else null
                 }
                 // 未提交:整库工作树 status

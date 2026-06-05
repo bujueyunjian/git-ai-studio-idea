@@ -26,7 +26,7 @@ class AiAnnotationColumnProvider : AnnotationGutterColumnProvider {
         val repo = RepoService.getInstance(project).currentRepoDir() ?: return null
         val rel = GitAiActionSupport.relativePath(repo, vf) ?: return null
         val cli = runCatching { GitAiCli.resolve(repo, GitAiSettings.getInstance().gitAiPath) }.getOrNull() ?: return null
-        val r = cli.blameJson(rel, emptyList(), "HEAD")
+        val r = cli.blameJson(rel, emptyList())
         if (!r.ok) return null
         val aiByLine = BlameAttributionSupport.parseAiLineAgents(r.stdout)
         if (aiByLine.isEmpty()) return null // 无 AI 行就不加列,避免一整列空白
