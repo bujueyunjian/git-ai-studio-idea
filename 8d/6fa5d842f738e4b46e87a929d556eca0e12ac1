@@ -1,0 +1,19 @@
+src/main/kotlin/com/gitaistudio/idea/bridge/CommandDispatcher.kt
+  s_2d52b45f22656f::t_57ec6f1107a1d0 624,626,629-638,640-649,652-661
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8d6fa5d842f738e4b46e87a929d556eca0e12ac1",
+  "prompts": {},
+  "sessions": {
+    "s_2d52b45f22656f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7278999f-5adf-447a-baf3-f59a45566076",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
