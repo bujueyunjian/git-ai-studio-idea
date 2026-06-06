@@ -11,8 +11,8 @@ import java.awt.Color
 data class LineAttribution(val isAi: Boolean, val agent: String?, val promptId: String?)
 
 /**
- * 编辑器行号槽的 AI 归因列。AI 行标 "AI"(紫),人工行标 "·"(蓝),未知行留空。
- * hover 显示 agent / 归因说明。颜色语义锁死(见 [AttributionColors])。
+ * 编辑器行号槽的 AI 归因列。AI 行标短模型名(紫,如 gpt-5.5),人工行标 "·"(蓝),未知行留空。
+ * hover 显示完整 tool::model / 归因说明。颜色语义锁死(见 [AttributionColors])。
  */
 class AiAttributionGutter(
     private val byLine: Map<Int, LineAttribution>,
@@ -21,7 +21,7 @@ class AiAttributionGutter(
 
     override fun getLineText(line: Int, editor: Editor): String {
         val info = byLine[line] ?: return ""
-        return if (info.isAi) "AI" else "·"
+        return if (info.isAi) BlameAttributionSupport.shortModelName(info.agent) else "·"
     }
 
     override fun getToolTip(line: Int, editor: Editor): String? {

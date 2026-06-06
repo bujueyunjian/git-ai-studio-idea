@@ -667,9 +667,11 @@ function BlameDialog({
         </span>
       }
     >
-      {/* 固定宽高容器:钉死宽+高,避免加载态窄、加载完变宽的弹性抖动;并给 CM6 确定高度规避长文件被裁 */}
+      {/* 固定宽高容器:钉死宽+高,避免加载态窄、加载完变宽的弹性抖动;并给 CM6 确定高度规避长文件被裁。
+          默认态按视口比例(75vw/60vh):webview 视口=工具窗口,固定 58rem/72vh 在窄视口下视觉≈全屏,
+          ↗ 展开就失去意义;宽屏下仍由 Dialog 的 max-w-5xl 兜上限。 */}
       <div
-        className={cn("flex min-h-0", full ? "h-[82vh] w-full" : "h-[72vh] w-[58rem] max-w-full")}
+        className={cn("flex min-h-0", full ? "h-[82vh] w-full" : "h-[60vh] w-[75vw] max-w-full")}
       >
         {fileQ.isLoading || blameQ.isLoading ? (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">

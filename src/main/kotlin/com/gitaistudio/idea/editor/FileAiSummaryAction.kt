@@ -16,6 +16,9 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.util.text.StringUtil
+import com.intellij.ui.ColorUtil
+import com.intellij.ui.JBColor
 
 /**
  * 编辑器右键 →「Git AI: 本文件 AI 占比」:**就地**在编辑器弹气泡显示本文件归因,不切换到工具窗口/看板。
@@ -62,20 +65,7 @@ class FileAiSummaryAction : AnAction() {
                 // 未提交:整库工作树 status
                 val working = cli.status().let { r -> if (r.ok) workingStats(r.stdout) else null }
 
-                html = buildString {
-                    append("<b>").append(vfile.name).append(" · AI 占比</b><br/>")
-                    if (committed != null && committed.total > 0) {
-                        append("已提交(HEAD):<b>AI ").append(committed.pct).append("%</b>")
-                            .append("(AI ").append(committed.ai).append(" / 共 ").append(committed.total).append(" 行)")
-                    } else {
-                        append("已提交(HEAD):本文件暂无 AI 归因")
-                    }
-                    if (working != null && (working.ai + working.human + working.unknown) > 0) {
-                        append("<br/>未提交(工作树·整库):AI ").append(working.ai)
-                            .append(" / 人工 ").append(working.human)
-                            .append(" / 未知 ").append(working.unknown).append(" 行")
-                    }
-                }
+                html = summaryHtml(vfile.name, committed, working)
             }
 
             override fun onSuccess() {
@@ -86,6 +76,62 @@ class FileAiSummaryAction : AnAction() {
 
     private fun fileShare(stdout: String, totalLines: Int): BlameAttributionSupport.Share =
         BlameAttributionSupport.fileShare(stdout, totalLines)
+
+    /**
+     * 气泡 HTML:标题 + 每个区块「彩色堆积进度条 + 图例」。
+     * 颜色复用 [AttributionColors] 的锁死语义(紫=AI、蓝=人工),未知用灰;
+     * Swing HTML 不支持 CSS 圆角/渐变,进度条用定宽 bgcolor 表格单元实现。
+     */
+    private fun summaryHtml(
+        fileName: String,
+        committed: BlameAttributionSupport.Share?,
+        working: Working?,
+    ): String {
+        val ai = "#" + ColorUtil.toHex(AttributionColors.AI.defaultColor ?: JBColor.GRAY)
+        val you = "#" + ColorUtil.toHex(AttributionColors.YOU.defaultColor ?: JBColor.GRAY)
+        val gray = "#" + ColorUtil.toHex(JBColor.GRAY)
+        return buildString {
+            append("<div><b>").append(StringUtil.escapeXmlEntities(fileName)).append(" · AI 占比</b><br/><br/>")
+            if (committed != null && committed.total > 0) {
+                val rest = (committed.total - committed.ai).toLong()
+                append("已提交(HEAD)&nbsp;&nbsp;<b>AI ").append(committed.pct).append("%</b><br/>")
+                append(barHtml(listOf(committed.ai.toLong() to ai, rest to gray)))
+                append(legendHtml(listOf(Triple(ai, "AI", committed.ai.toLong()), Triple(gray, "其他", rest))))
+                append(" 行")
+            } else {
+                append("已提交(HEAD):本文件暂无 AI 归因")
+            }
+            if (working != null && (working.ai + working.human + working.unknown) > 0) {
+                append("<br/><br/>未提交(工作树·整库)<br/>")
+                append(barHtml(listOf(working.ai to ai, working.human to you, working.unknown to gray)))
+                append(legendHtml(listOf(Triple(ai, "AI", working.ai), Triple(you, "人工", working.human), Triple(gray, "未知", working.unknown))))
+                append(" 行")
+            }
+            append("</div>")
+        }
+    }
+
+    /** 单行堆积条:非零段按比例分宽(最窄 4px 保证可见),余数补给末段。 */
+    private fun barHtml(segments: List<Pair<Long, String>>, totalWidth: Int = 240): String {
+        val total = segments.sumOf { it.first }
+        if (total <= 0) return ""
+        val nonZero = segments.filter { it.first > 0 }
+        val sb = StringBuilder("<table cellspacing='0' cellpadding='0' border='0'><tr>")
+        var used = 0
+        nonZero.forEachIndexed { i, (value, color) ->
+            val w = if (i == nonZero.lastIndex) (totalWidth - used).coerceAtLeast(4)
+            else ((value * totalWidth) / total).toInt().coerceAtLeast(4)
+            used += w
+            sb.append("<td bgcolor='").append(color).append("' width='").append(w)
+                .append("'><font size='-3'>&nbsp;</font></td>")
+        }
+        sb.append("</tr></table>")
+        return sb.toString()
+    }
+
+    private fun legendHtml(items: List<Triple<String, String, Long>>): String =
+        items.filter { it.third > 0 }
+            .joinToString("&nbsp;&nbsp;") { (color, label, value) -> "<font color='$color'>●</font> $label $value" }
 
     private data class Working(val ai: Long, val human: Long, val unknown: Long)
 
@@ -103,7 +149,8 @@ class FileAiSummaryAction : AnAction() {
         JBPopupFactory.getInstance()
             .createHtmlTextBalloonBuilder(html, type, null)
             .setHideOnClickOutside(true)
-            .setFadeoutTime(8000)
+            // 「不容易看到」反馈:8s 不够读完两组数据,延长;点击外部仍即时关闭。
+            .setFadeoutTime(15_000)
             .createBalloon()
             .show(point, Balloon.Position.above)
     }

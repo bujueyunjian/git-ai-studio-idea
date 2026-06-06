@@ -35,7 +35,9 @@ class AiAnnotationColumnProvider : AnnotationGutterColumnProvider {
 
     /** aiByLine 用 1-based 行号;LineAnnotationAspect 的 line 是 0-based,故查 line+1。 */
     private class AiAspect(private val aiByLine: Map<Int, String?>) : LineAnnotationAspect {
-        override fun getValue(line: Int): String = if (aiByLine.containsKey(line + 1)) "AI" else ""
+        // 列内放短模型名(gpt-5.5 / claude-sonnet-4-5),完整 tool::model 在 tooltip——与看板口径一致且不撑宽 gutter。
+        override fun getValue(line: Int): String =
+            if (aiByLine.containsKey(line + 1)) BlameAttributionSupport.shortModelName(aiByLine[line + 1]) else ""
 
         override fun getTooltipText(line: Int): String? {
             if (!aiByLine.containsKey(line + 1)) return null

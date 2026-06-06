@@ -39,7 +39,7 @@ object BlameAttributionSupport {
         val out = HashMap<Int, LineAttribution>()
         lines.entrySet().forEach { (key, promptIdElement) ->
             val promptId = promptIdElement.takeIf { it.isJsonPrimitive }?.asString ?: return@forEach
-            val agent = promptModel(prompts, promptId)
+            val agent = promptToolModel(prompts, promptId)
             expandLineKey(key)?.forEach { line1 ->
                 out[line1 - 1] = LineAttribution(isAi = true, agent = agent, promptId = promptId)
             }
@@ -47,12 +47,25 @@ object BlameAttributionSupport {
         return out
     }
 
-    private fun promptModel(prompts: JsonObject, promptId: String): String? =
-        prompts.obj(promptId)
-            ?.obj("agent_id")
-            ?.get("model")
-            ?.takeIf { it.isJsonPrimitive }
-            ?.asString
+    /** 与 webview 看板同口径:`tool::model`(BlamePromptDetails);缺一边时退化为另一边。 */
+    private fun promptToolModel(prompts: JsonObject, promptId: String): String? {
+        val agentId = prompts.obj(promptId)?.obj("agent_id") ?: return null
+        val tool = agentId.get("tool")?.takeIf { it.isJsonPrimitive }?.asString?.takeIf { it.isNotBlank() }
+        val model = agentId.get("model")?.takeIf { it.isJsonPrimitive }?.asString?.takeIf { it.isNotBlank() }
+        return if (tool != null && model != null) "$tool::$model" else model ?: tool
+    }
+
+    /**
+     * gutter 列内的短模型名:取 `tool::model` 的 model 段并去日期后缀
+     * (claude-sonnet-4-5-20250929 → claude-sonnet-4-5);无模型信息时退回 "AI"。
+     * 完整 `tool::model` 留给 tooltip,避免长模型名撑宽 gutter。
+     */
+    fun shortModelName(agent: String?): String {
+        val model = agent?.substringAfter("::")?.takeIf { it.isNotBlank() } ?: return "AI"
+        return model.replace(MODEL_DATE_SUFFIX, "")
+    }
+
+    private val MODEL_DATE_SUFFIX = Regex("-\\d{8}$")
 
     private fun expandLineKey(key: String): IntRange? {
         val parts = key.split("-", limit = 2)
