@@ -5,6 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-06-06
+
+### Fixed
+
+- **Notes page was blank.** `list_ai_notes` returned a bare `{commits, unreachable}` object, while the
+  webview (matching the OSS desktop contract) expects a `{status, payload}` envelope with
+  `notes[{commit_sha, short_sha, note_oid, committed_at, subject}]`, `repo_path`, `head_sha` and
+  `unreachable_shas` — the `status === "ok"` check never passed, so the page rendered nothing. The
+  dispatcher now emits the OSS-aligned envelope and returns `degraded: repo_missing / no_notes_in_repo`
+  for the empty cases.
+
+### Changed
+
+- **Blame dialog no longer opens near-fullscreen.** The webview viewport is the tool window itself, so the
+  fixed `58rem`/`72vh` default visually filled it and made the expand toggle meaningless. The default is
+  now viewport-relative (`75vw`/`60vh`), still capped by `max-w-5xl` on wide screens.
+- **Gutter annotations show the model name.** The native Annotate column and the editor attribution gutter
+  now label AI lines with the short model name (e.g. `gpt-5.5`, `claude-sonnet-4-5`; date suffix stripped)
+  and put the full `tool::model` (e.g. `codex::gpt-5.5`) in the tooltip — same source and format as the
+  webview blame panel.
+- **File AI-share balloon redesigned.** The right-click summary balloon now renders a title plus stacked
+  color bars with legends (purple=AI, blue=human, gray=unknown — the locked attribution palette) instead
+  of plain text, escapes file names, and stays 15s instead of 8s.
+
 ## [0.4.7] - 2026-06-05
 
 ### Fixed
