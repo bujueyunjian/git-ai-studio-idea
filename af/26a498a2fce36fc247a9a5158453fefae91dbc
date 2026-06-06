@@ -1,0 +1,31 @@
+webview/src/pages/Stats.tsx
+  s_2d52b45f22656f::t_5a17a290f07551 670-672,674
+src/main/kotlin/com/gitaistudio/idea/editor/BlameAttributionSupport.kt
+  s_2d52b45f22656f::t_183f964c264a0d 42,50-68
+src/main/kotlin/com/gitaistudio/idea/editor/FileAiSummaryAction.kt
+  s_2d52b45f22656f::t_bd2be4d5f5b5ac 90-91
+  s_2d52b45f22656f::t_cc44e86be201b2 68
+  s_2d52b45f22656f::t_b7abde1a6a7a13 19-21
+  s_2d52b45f22656f::t_601263574e5d6e 152-153
+  s_2d52b45f22656f::t_290ae39975514b 80-89,92-135
+src/main/kotlin/com/gitaistudio/idea/annotate/AiAnnotationColumnProvider.kt
+  s_2d52b45f22656f::t_f38f5ad776a559 38-40
+src/main/kotlin/com/gitaistudio/idea/editor/AiAttributionGutter.kt
+  s_2d52b45f22656f::t_adace8f5701a17 14-15,24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "af26a498a2fce36fc247a9a5158453fefae91dbc",
+  "prompts": {},
+  "sessions": {
+    "s_2d52b45f22656f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7278999f-5adf-447a-baf3-f59a45566076",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
