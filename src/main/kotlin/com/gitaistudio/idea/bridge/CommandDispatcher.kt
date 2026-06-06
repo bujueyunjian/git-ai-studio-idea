@@ -621,21 +621,44 @@ class CommandDispatcher(
 
     // ---------- Notes / Diff ----------
 
+    /** 对齐 OSS list_ai_notes 契约:{status, payload:{repo_path, head_sha, notes, unreachable_shas}}。 */
     private fun listAiNotes(): JsonElement {
-        val dir = repoService.currentRepoDir() ?: return JsonUtil.obj("commits" to JsonArray(), "unreachable" to JsonArray())
+        val dir = repoService.currentRepoDir() ?: return degraded("repo_missing", "reason")
         val git = GitCli.resolve(dir)
         val r = git.notesList()
-        if (!r.ok) return JsonUtil.obj("commits" to JsonArray(), "unreachable" to JsonArray())
-        val shas = r.stdout.lines().mapNotNull { it.trim().split(" ").getOrNull(1) }.distinct()
-        val commits = JsonArray()
+        // ref 不存在 / 为空:与 OSS 一致走 degraded,前端渲染"仓库无 AI notes"空态。
+        if (!r.ok || r.stdout.isBlank()) return degraded("no_notes_in_repo", "reason")
+        // 每行 "<note_oid> <commit_sha>";同一 commit 只取首个 note oid。
+        val noteOidBySha = LinkedHashMap<String, String>()
+        r.stdout.lines().forEach { line ->
+            val parts = line.trim().split(" ")
+            if (parts.size >= 2) noteOidBySha.putIfAbsent(parts[1], parts[0])
+        }
+        if (noteOidBySha.isEmpty()) return degraded("no_notes_in_repo", "reason")
+        val notes = JsonArray()
         val unreachable = JsonArray()
-        shas.forEach { sha ->
-            val log = git.logNoWalk("%H%x1f%h%x1f%cI%x1f%an%x1f%ae%x1f%s%x1f%P", listOf(sha))
-            if (log.ok && log.stdout.isNotBlank()) {
-                parseCommitLine(log.stdout.trim())?.let { commits.add(it.toBrief()) }
+        noteOidBySha.forEach { (sha, noteOid) ->
+            val log = git.logNoWalk(LOG_FORMAT, listOf(sha))
+            val meta = if (log.ok && log.stdout.isNotBlank()) parseCommitLine(log.stdout.trim()) else null
+            if (meta != null) {
+                notes.add(
+                    JsonUtil.obj(
+                        "commit_sha" to meta.sha, "short_sha" to meta.short, "note_oid" to noteOid,
+                        "committed_at" to meta.authoredAt, "subject" to meta.subject,
+                    )
+                )
             } else unreachable.add(sha)
         }
-        return JsonUtil.obj("commits" to commits, "unreachable" to unreachable)
+        val headSha = git.revParseHead().takeIf { it.ok }?.stdout?.trim()?.takeIf { it.isNotBlank() }
+        return JsonUtil.obj(
+            "status" to "ok",
+            "payload" to JsonUtil.obj(
+                "repo_path" to dir.absolutePath,
+                "head_sha" to headSha,
+                "notes" to notes,
+                "unreachable_shas" to unreachable,
+            ),
+        )
     }
 
     private fun showAiNote(sha: String): JsonElement {
