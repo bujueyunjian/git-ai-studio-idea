@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.9] - 2026-06-07
+
+### Added
+
+- **AI coding tools panel on the Diagnostic page.** Below the agent hook grid, a new panel detects npm and
+  the installed version of each CLI, and installs / uninstalls them globally via npm with one click
+  (`npm install / uninstall -g`, optional pinned version, defaults to `latest`). It reuses the git-ai
+  installer's `install://<job>/log` streaming protocol and a process-wide install lock (only one install /
+  uninstall runs at a time). Uninstall removes the global package only — your `~/.claude` / `~/.codex`
+  config dirs are left untouched. The `!` toggle expands the exact commands that will run, each with a note
+  on what it does. New backend commands: `detect_npm`, `detect_agent_cli`, `install_agent_cli`,
+  `uninstall_agent_cli`, `refresh_path_env`.
+
+### Fixed
+
+- **npm / Claude Code / Codex not detected when launched from the GUI.** `ExecutableLocator` now also
+  searches the common Node tool dirs (nvm versioned bins, volta, bun, npm global prefix, Homebrew) for both
+  resolution and child-process PATH, so CLIs installed via nvm/volta are found even when the IDE inherits a
+  minimal PATH.
+
 ## [0.4.8] - 2026-06-06
 
 ### Fixed
