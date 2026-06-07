@@ -5,10 +5,12 @@ import com.gitaistudio.idea.bridge.JsonUtil.int
 import com.gitaistudio.idea.bridge.JsonUtil.str
 import com.gitaistudio.idea.bridge.JsonUtil.strArray
 import com.gitaistudio.idea.agents.AgentHookDetector
+import com.gitaistudio.idea.cli.ExecutableLocator
 import com.gitaistudio.idea.cli.GitAiCli
 import com.gitaistudio.idea.cli.GitAiNotFound
 import com.gitaistudio.idea.cli.GitCli
 import com.gitaistudio.idea.cli.ProcResult
+import com.gitaistudio.idea.cli.ProcessRunner
 import com.gitaistudio.idea.service.GitAiSettings
 import com.gitaistudio.idea.service.RepoService
 import com.gitaistudio.idea.service.StatsCache
@@ -66,6 +68,21 @@ class CommandDispatcher(
         "set_aggregate_repos" -> setAggregateRepos(args)
 
         "get_installed_version" -> getInstalledVersion()
+
+        // AI 编码工具(Claude Code / Codex)npm 装卸 —— 复用 install://<job>/log 流式协议 + 进程级 install_lock。
+        "refresh_path_env" -> JsonNull.INSTANCE // 本插件 PATH/可执行解析每次实时扫描,无缓存可刷,no-op 即可触发前端重探
+        "detect_npm" -> detectNpm()
+        "detect_agent_cli" -> detectAgentCli(args.str("agent") ?: throw DispatchError("missing agent"))
+        "install_agent_cli" -> installAgentCli(
+            args.str("jobId") ?: throw DispatchError("missing jobId"),
+            args.str("agent") ?: throw DispatchError("missing agent"),
+            args.str("version"),
+        )
+        "uninstall_agent_cli" -> uninstallAgentCli(
+            args.str("jobId") ?: throw DispatchError("missing jobId"),
+            args.str("agent") ?: throw DispatchError("missing agent"),
+            args.str("confirmToken") ?: throw DispatchError("missing confirmToken"),
+        )
 
         "list_recent_commits" -> listRecentCommits(args.int("maxCount", 50))
         "list_recent_commits_with_stats" -> listRecentCommitsWithStats(args.int("maxCount", 50))
@@ -280,6 +297,106 @@ class CommandDispatcher(
         emit(topic, exit)
         return JsonPrimitive(code)
     }
+
+    // ---------- AI 编码工具(Claude Code / Codex)npm 装卸 ----------
+
+    private data class AgentCliMeta(val label: String, val pkg: String, val bin: String)
+
+    private fun agentCliMeta(agent: String): AgentCliMeta? = when (agent) {
+        "ClaudeCode" -> AgentCliMeta("Claude Code", "@anthropic-ai/claude-code", "claude")
+        "Codex" -> AgentCliMeta("Codex", "@openai/codex", "codex")
+        else -> null
+    }
+
+    /** npm 探测:available=false 是预期空态(未装 Node),绝不抛错(前端据此禁用装/卸并提示)。 */
+    private fun detectNpm(): JsonElement {
+        val npm = ExecutableLocator.find("npm")
+            ?: return JsonUtil.obj("available" to false, "version" to null, "path" to null)
+        val r = ProcessRunner.run(npm, listOf("--version"), null, 5_000)
+        val version = if (r.ok) r.stdout.trim().ifBlank { null } else null
+        return JsonUtil.obj("available" to true, "version" to version, "path" to npm)
+    }
+
+    /** CLI 探测:跑 `<bin> --version`,从输出抠 semver。未装返回 installed=false(预期空态,不抛错)。 */
+    private fun detectAgentCli(agent: String): JsonElement {
+        val meta = agentCliMeta(agent) ?: throw DispatchError("unknown agent: $agent")
+        val bin = ExecutableLocator.find(meta.bin)
+            ?: return JsonUtil.obj("installed" to false, "version" to null, "binary_path" to null)
+        val r = ProcessRunner.run(bin, listOf("--version"), null, 5_000)
+        val version = if (r.ok) (extractVersion(r.stdout) ?: extractVersion(r.stderr)) else null
+        return JsonUtil.obj("installed" to true, "version" to (version?.let { JsonPrimitive(it) } ?: JsonNull.INSTANCE), "binary_path" to bin)
+    }
+
+    private fun installAgentCli(jobId: String, agent: String, version: String?): JsonElement {
+        val meta = agentCliMeta(agent) ?: throw DispatchError("unknown agent: $agent")
+        val npm = ExecutableLocator.find("npm")
+            ?: throw DispatchError("未找到 npm,请先安装 Node.js(https://nodejs.org)后重试")
+        acquireInstallLock(jobId)
+        try {
+            val spec = buildInstallSpec(meta.pkg, version)
+            val code = streamNpm(jobId, npm, listOf("install", "-g", spec))
+            return when {
+                code == -1 -> throw DispatchError("命令执行超时(300s)")
+                code != 0 -> throw DispatchError("${meta.label} 安装失败(npm 退出码 $code),详见日志")
+                else -> JsonPrimitive(code)
+            }
+        } finally {
+            releaseInstallLock()
+        }
+    }
+
+    private fun uninstallAgentCli(jobId: String, agent: String, confirmToken: String): JsonElement {
+        if (confirmToken != "uninstall") throw DispatchError("二次确认 token 错误")
+        val meta = agentCliMeta(agent) ?: throw DispatchError("unknown agent: $agent")
+        val npm = ExecutableLocator.find("npm")
+            ?: throw DispatchError("未找到 npm,请先安装 Node.js(https://nodejs.org)后重试")
+        acquireInstallLock(jobId)
+        try {
+            // 只移除 npm 全局包,绝不动 ~/.claude、~/.codex 配置目录。
+            val code = streamNpm(jobId, npm, listOf("uninstall", "-g", meta.pkg))
+            return when {
+                code == -1 -> throw DispatchError("命令执行超时(300s)")
+                code != 0 -> throw DispatchError("${meta.label} 卸载失败(npm 退出码 $code),详见日志")
+                else -> JsonNull.INSTANCE
+            }
+        } finally {
+            releaseInstallLock()
+        }
+    }
+
+    /** 与后端 build_install_args 一致:version 为空/latest → 裸包名;否则 pkg@version(原样透传,合法性交 npm)。 */
+    private fun buildInstallSpec(pkg: String, version: String?): String {
+        val v = version?.trim().orEmpty()
+        return if (v.isEmpty() || v == "latest") pkg else "$pkg@$v"
+    }
+
+    /** 流式跑 npm,逐行推 install://<jobId>/log,结束推 exit 事件(超时 code=-1 + timeout:true),返回退出码。 */
+    private fun streamNpm(jobId: String, npm: String, args: List<String>): Int {
+        val topic = "install://$jobId/log"
+        val code = ProcessRunner.runStreaming(npm, args, null, 300_000) { line ->
+            emit(topic, JsonUtil.obj("stream" to "stdout", "line" to line, "ts" to System.currentTimeMillis()))
+        }
+        val exit = if (code == -1) {
+            JsonUtil.obj("stream" to "exit", "code" to -1, "timeout" to true, "ts" to System.currentTimeMillis())
+        } else {
+            JsonUtil.obj("stream" to "exit", "code" to code, "ts" to System.currentTimeMillis())
+        }
+        emit(topic, exit)
+        return code
+    }
+
+    private fun acquireInstallLock(jobId: String) {
+        if (!installLock.compareAndSet(null, jobId)) {
+            throw DispatchError("已有一个安装 / 卸载任务在运行,请等待完成")
+        }
+    }
+
+    private fun releaseInstallLock() {
+        installLock.set(null)
+    }
+
+    /** 从 `--version` 输出抠 semver(claude/codex 输出不纯净,需正则);抠不到返回 null(前端显示「版本未知」)。 */
+    private fun extractVersion(s: String): String? = VERSION_RE.find(s)?.groupValues?.get(1)
 
     /** 读 ~/.claude/settings.json 概览(Hooks 页 settings 概览卡 + 查看原文)。纯文件读,无子进程。 */
     private fun readClaudeSettings(): JsonElement {
@@ -1074,5 +1191,13 @@ class CommandDispatcher(
         private val ZONE: ZoneId = ZoneId.systemDefault()
         // sha, short, committer ISO, author name, author email, subject, parents
         private const val LOG_FORMAT = "%H%x1f%h%x1f%cI%x1f%an%x1f%ae%x1f%s%x1f%P"
+
+        private val VERSION_RE = Regex("""\b(\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?)\b""")
+
+        /**
+         * 进程级安装互斥锁(对齐桌面版 install_lock):同一时刻只跑一个 agent CLI 装/卸任务。
+         * 类级静态 → 跨 WebUiPanel 实例 / 跨项目共享。值为持锁任务的 jobId。
+         */
+        private val installLock = java.util.concurrent.atomic.AtomicReference<String?>(null)
     }
 }

@@ -20,6 +20,7 @@ import { QuickFixDialog, type QuickFixSkipEntry } from "../components/QuickFixDi
 import { Dialog } from "../components/ui/DialogShell";
 import { StatusDot } from "../components/StatusDot";
 import { Tooltip } from "../components/ui/TooltipBubble";
+import { AgentCliInstaller } from "../components/AgentCliInstaller";
 import {
   diagnoseEnvironment,
   diagnoseGitAiDaemon,
@@ -29,6 +30,7 @@ import {
   installHooksForAgent,
   installHooksOfficial,
   invalidateDiagnosticCache,
+  refreshPathEnv,
   repairGitAiDaemon,
 } from "../lib/api";
 import { notify } from "../lib/osNotify";
@@ -223,6 +225,9 @@ export default function DiagnosticPage({ embedded = false }: { embedded?: boolea
 
   const refreshM = useMutation({
     mutationFn: async () => {
+      // 先 best-effort 重读真实 PATH(覆盖"App 运行后才装 git-ai/git/Node"),失败不阻断诊断刷新
+      // ——本操作的契约是刷新诊断,PATH 重读是附带;它自身失败在 AI 编码工具面板才响亮上报。
+      await refreshPathEnv().catch(() => {});
       await invalidateDiagnosticCache();
       return diagnoseEnvironment(true);
     },
@@ -641,6 +646,9 @@ export default function DiagnosticPage({ embedded = false }: { embedded?: boolea
               </div>
             )}
           </section>
+
+          {/* Claude Code / Codex 的 npm 装卸(就近接在 agent hook 网格下方:装好 CLI → 配 hook 是同一条引导线) */}
+          <AgentCliInstaller />
 
           {/* 全部检查项抽屉:默认折叠的完整清单(问题已在上方"需要处理"突出);异常项置顶 + 状态 chip,detail/impact 收进 ⓘ。 */}
           <Collapsible
