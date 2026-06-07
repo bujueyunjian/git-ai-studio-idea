@@ -1,0 +1,42 @@
+webview/src/i18n/locales/en.json
+  s_105736a7be6b1f::t_4ae0cdf2a467cd 706-735
+webview/src/pages/Diagnostic.tsx
+  s_105736a7be6b1f::t_e71d7c871891b4 650-652
+  s_105736a7be6b1f::t_b9e95448b926d9 228-230
+  s_105736a7be6b1f::t_68645cae14225a 23,33
+webview/src/i18n/locales/zh-CN.json
+  s_105736a7be6b1f::t_8df5151e41ff1d 706-735
+webview/src/components/AgentCliInstaller.tsx
+  s_105736a7be6b1f::t_25e10e5a175b12 1-409
+webview/src/lib/types.ts
+  s_105736a7be6b1f::t_450ec43dcf41fa 136-145
+webview/src/lib/api.ts
+  s_105736a7be6b1f::t_d038928250e40d 39
+  s_105736a7be6b1f::t_ecf6b3025795fa 107-116
+  s_105736a7be6b1f::t_a986457cffba21 3
+src/main/kotlin/com/gitaistudio/idea/cli/ExecutableLocator.kt
+  s_105736a7be6b1f::t_901a44a7df2491 35-70,77
+  s_105736a7be6b1f::t_00fd3b2312b86b 92
+src/main/kotlin/com/gitaistudio/idea/bridge/CommandDispatcher.kt
+  s_105736a7be6b1f::t_1c7b0b637c8101 1194-1201
+  s_105736a7be6b1f::t_0501c2f878f217 398-400
+  s_105736a7be6b1f::t_532803472a82ca 72-86
+  s_105736a7be6b1f::t_16323db10bd88b 301-397
+  s_105736a7be6b1f::t_815e9b2a81ccfe 8,13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "be434028171dc8d4cf1c1629659ca526235b4504",
+  "prompts": {},
+  "sessions": {
+    "s_105736a7be6b1f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4bdeb38d-8077-430c-a0e4-28921e79d0a0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bujueyunjian <bbujueyunjian@gmail.com>"
+    }
+  }
+}
